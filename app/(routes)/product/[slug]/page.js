@@ -1,8 +1,11 @@
+import { notFound } from 'next/navigation';
 import ProductDetailClient from '@/components/ProductDetail';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import Script from 'next/script';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.petnicstudio.com';
+
+export const revalidate = 300;
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
@@ -88,6 +91,8 @@ export default async function ProductPage({ params }) {
       { '@type': 'ListItem', position: 4, name: product.name, item: `${SITE_URL}/product/${slug}` },
     ].filter(Boolean),
   } : null;
+
+  if (!product) notFound();
 
   return (
     <>

@@ -41,8 +41,14 @@ export async function generateMetadata({ params }) {
       title: meta.title,
       description: meta.description,
       url: `${SITE_URL}/shop/${category}`,
-      images: [{ url: `${SITE_URL}/og-shop-${category}.jpg`, width: 1200, height: 630, alt: meta.title }],
+      images: [{ url: `${SITE_URL}/og-image.jpg`, width: 1200, height: 630, alt: meta.title }],
       type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: meta.title,
+      description: meta.description,
+      images: [`${SITE_URL}/og-image.jpg`],
     },
   };
 }
@@ -57,6 +63,20 @@ export default async function ShopCategoryPage({ params }) {
     ? meta.title.split('|')[0].trim()
     : category.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
 
+  const itemListSchema = products?.length > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: categoryName,
+    url: `${SITE_URL}/shop/${category}`,
+    numberOfItems: products.length,
+    itemListElement: products.slice(0, 20).map((p, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: `${SITE_URL}/product/${p.slug}`,
+      name: p.name,
+    })),
+  } : null;
+
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -69,6 +89,13 @@ export default async function ShopCategoryPage({ params }) {
 
   return (
     <>
+      {itemListSchema && (
+        <Script
+          id="shop-category-itemlist-schema"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
+        />
+      )}
       <Script
         id="shop-category-breadcrumb-schema"
         type="application/ld+json"
