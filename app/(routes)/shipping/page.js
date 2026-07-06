@@ -117,7 +117,7 @@ const sections = [
     id: 'contact',
     heading: 'Contact Us',
     body: (
-      <p>Shipping questions? Email <a href="mailto:hello@petnicstudio.com">hello@petnicstudio.com</a> with your order number and we’ll respond within one business day.</p>
+      <p>Shipping questions? Email <a href="mailto:info@petnicstudio.com">info@petnicstudio.com</a> with your order number and we’ll respond within one business day.</p>
     ),
   },
 ];

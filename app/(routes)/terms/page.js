@@ -29,7 +29,7 @@ const sections = [
     heading: 'Your Account',
     body: (
       <>
-        <p>You are responsible for keeping your account credentials confidential and for all activity that occurs under your account. Notify us immediately at <a href="mailto:hello@petnicstudio.com">hello@petnicstudio.com</a> if you suspect unauthorised use.</p>
+        <p>You are responsible for keeping your account credentials confidential and for all activity that occurs under your account. Notify us immediately at <a href="mailto:info@petnicstudio.com">info@petnicstudio.com</a> if you suspect unauthorised use.</p>
         <p>We reserve the right to suspend or terminate accounts that violate these Terms, engage in fraud, or harm other users.</p>
       </>
     ),
@@ -130,7 +130,7 @@ const sections = [
     id: 'contact',
     heading: 'Contact Us',
     body: (
-      <p>Questions about these Terms? Email us at <a href="mailto:hello@petnicstudio.com">hello@petnicstudio.com</a>.</p>
+      <p>Questions about these Terms? Email us at <a href="mailto:info@petnicstudio.com">info@petnicstudio.com</a>.</p>
     ),
   },
 ];

@@ -110,8 +110,8 @@ const LegalPage = ({ title, intro, effective, sections = [] }) => {
 
             <div className="border-t border-gray-100 pt-6 text-sm text-[#4A4A68]">
               Questions? Reach us at{' '}
-              <a href="mailto:hello@petnicstudio.com" className="text-[#F97316] hover:underline">
-                hello@petnicstudio.com
+              <a href="mailto:info@petnicstudio.com" className="text-[#F97316] hover:underline">
+                info@petnicstudio.com
               </a>
               .
             </div>

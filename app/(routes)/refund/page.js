@@ -44,7 +44,7 @@ const sections = [
     body: (
       <>
         <ol className="list-decimal pl-5 space-y-1">
-          <li>Email <a href="mailto:hello@petnicstudio.com">hello@petnicstudio.com</a> within 30 days of delivery with your order number and (for damaged items) clear photos of the issue.</li>
+          <li>Email <a href="mailto:info@petnicstudio.com">info@petnicstudio.com</a> within 30 days of delivery with your order number and (for damaged items) clear photos of the issue.</li>
           <li>Our team will review and reply within 2 business days with next steps and, where applicable, a prepaid return label.</li>
           <li>Pack the item securely in its original packaging and ship it back within 14 days of receiving the return label.</li>
         </ol>
@@ -87,14 +87,14 @@ const sections = [
     id: 'late-missing',
     heading: 'Late or Missing Refunds',
     body: (
-      <p>If you haven’t received a refund within 15 business days of our confirmation, please check with your bank, then contact us at <a href="mailto:hello@petnicstudio.com">hello@petnicstudio.com</a> and we will investigate immediately.</p>
+      <p>If you haven’t received a refund within 15 business days of our confirmation, please check with your bank, then contact us at <a href="mailto:info@petnicstudio.com">info@petnicstudio.com</a> and we will investigate immediately.</p>
     ),
   },
   {
     id: 'contact',
     heading: 'Contact Us',
     body: (
-      <p>For any return, refund or exchange question, email <a href="mailto:hello@petnicstudio.com">hello@petnicstudio.com</a>. We aim to respond within one business day.</p>
+      <p>For any return, refund or exchange question, email <a href="mailto:info@petnicstudio.com">info@petnicstudio.com</a>. We aim to respond within one business day.</p>
     ),
   },
 ];

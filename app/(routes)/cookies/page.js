@@ -90,7 +90,7 @@ const sections = [
     id: 'contact',
     heading: 'Contact Us',
     body: (
-      <p>Questions about our use of cookies? Email <a href="mailto:hello@petnicstudio.com">hello@petnicstudio.com</a>.</p>
+      <p>Questions about our use of cookies? Email <a href="mailto:info@petnicstudio.com">info@petnicstudio.com</a>.</p>
     ),
   },
 ];

@@ -44,7 +44,7 @@ const organizationSchema = {
   contactPoint: {
     '@type': 'ContactPoint',
     telephone: '+1-581-891-8811',
-    email: 'hello@petnicstudio.com',
+    email: 'info@petnicstudio.com',
     contactType: 'customer service',
   },
   sameAs: [

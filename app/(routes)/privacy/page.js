@@ -78,7 +78,7 @@ const sections = [
           <li>Request a copy of your data in a portable format.</li>
           <li>Withdraw consent (e.g., marketing emails) at any time.</li>
         </ul>
-        <p>To exercise any of these rights, email us at <a href="mailto:hello@petnicstudio.com">hello@petnicstudio.com</a>. We will respond within 30 days.</p>
+        <p>To exercise any of these rights, email us at <a href="mailto:info@petnicstudio.com">info@petnicstudio.com</a>. We will respond within 30 days.</p>
       </>
     ),
   },
@@ -107,7 +107,7 @@ const sections = [
     id: 'contact',
     heading: 'Contact Us',
     body: (
-      <p>For any privacy-related questions, contact our Data Protection lead at <a href="mailto:hello@petnicstudio.com">hello@petnicstudio.com</a>.</p>
+      <p>For any privacy-related questions, contact our Data Protection lead at <a href="mailto:info@petnicstudio.com">info@petnicstudio.com</a>.</p>
     ),
   },
 ];

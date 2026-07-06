@@ -47,7 +47,7 @@ const ContactPage = () => {
           {/* Contact Info */}
           <div className="space-y-6">
             {[
-              { icon: Mail, label: 'Email', value: 'hello@petnicstudio.com', href: 'mailto:hello@petnicstudio.com' },
+              { icon: Mail, label: 'Email', value: 'info@petnicstudio.com', href: 'mailto:info@petnicstudio.com' },
               { icon: Phone, label: 'Phone', value: '+1 (581) 891-8811', href: 'tel:+15818918811' },
               { icon: Clock, label: 'Hours', value: 'Mon–Fri 9AM–6PM EST', href: null },
               { icon: MapPin, label: 'Address', value: '1001 S Main St Ste 12362, Kalispell, MT 59901', href: null },
