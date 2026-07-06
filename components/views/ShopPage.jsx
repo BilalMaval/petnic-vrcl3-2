@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Search, SlidersHorizontal, Star, ShoppingCart, Heart, X } from 'lucide-react';
 
 // Category-specific SEO content
@@ -124,8 +125,8 @@ const ShopPage = ({ initialCategory, initialProducts, initialCategories }) => {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {products.map(p => (
               <Link key={p.id} href={`/product/${p.slug}`} className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl hover:border-orange-100 transition-all duration-300 hover:-translate-y-1 block" data-testid={`product-card-${p.slug}`}>
-                <div className="relative overflow-hidden">
-                  <img src={p.image_url} alt={p.name} className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                <div className="relative overflow-hidden h-56">
+                  <Image src={p.image_url} alt={p.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover group-hover:scale-105 transition-transform duration-500" />
                   {p.badge && <span className="absolute top-3 left-3 bg-[#F97316] text-white text-xs font-bold px-3 py-1 rounded-full">{p.badge}</span>}
                   {discount(p) > 0 && <span className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">-{discount(p)}%</span>}
                 </div>

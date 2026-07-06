@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
 
 const CTASection = () => {
@@ -7,11 +8,12 @@ const CTASection = () => {
     <section className="relative py-24 overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0">
-        <img
+        <Image
           src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=1200&q=80"
           alt="Happy pets - Create custom pet portraits at Petnic Studio"
-          className="w-full h-full object-cover"
-          loading="lazy"
+          fill
+          sizes="100vw"
+          className="object-cover"
         />
         <div className="absolute inset-0 bg-[#1A1A2E]/80" />
       </div>

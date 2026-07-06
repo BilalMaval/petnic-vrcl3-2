@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
 import { categories } from '@/config/static-data';
 
@@ -22,11 +23,12 @@ const Categories = () => {
               href={cat.slug === 'digital-downloads' ? '/digital-downloads' : cat.slug === 'pet-care' ? '/pet-care' : `/shop/${cat.slug}`}
               className="group relative rounded-2xl overflow-hidden h-72 block"
             >
-              <img
+              <Image
                 src={cat.image}
                 alt={`${cat.name} - Browse ${cat.productCount}+ custom pet products`}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                loading="lazy"
+                fill
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                className="object-cover group-hover:scale-110 transition-transform duration-700"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-6">

@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { Star, ShoppingCart, Leaf, Shield, Search, Loader2, Truck, ExternalLink } from 'lucide-react';
 
@@ -108,8 +109,8 @@ const PetCarePage = () => {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {products.map(p => (
               <Link key={p.id} href={`/product/${p.slug}`} className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 block" data-testid={`petcare-card-${p.slug}`}>
-                <div className="relative overflow-hidden">
-                  <img src={p.image_url} alt={p.name} className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                <div className="relative overflow-hidden h-56">
+                  <Image src={p.image_url} alt={p.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-500" />
                   {p.badge && <span className="absolute top-3 left-3 bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-full">{p.badge}</span>}
                   {discount(p) > 0 && <span className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">-{discount(p)}%</span>}
                   {p.supplier_name && (

@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin, ArrowRight, Heart } from 'lucide-react';
 import { footerLinks } from '@/config/static-data';
 
@@ -52,7 +53,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <img src="/petnic-logo.png" alt="Petnic Studio - Custom Pet Portraits" className="h-12 w-auto" />
+              <Image src="/petnic-logo.png" alt="Petnic Studio - Custom Pet Portraits" width={48} height={48} className="h-12 w-auto" />
             </Link>
             <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-sm">Personalize your pet's story with stunning, custom art & premium care products. Museum-grade quality with love in every detail.</p>
             <div className="space-y-2.5 text-sm">

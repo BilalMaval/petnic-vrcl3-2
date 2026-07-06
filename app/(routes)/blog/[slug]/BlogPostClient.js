@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Clock, User, Calendar, ArrowLeft, Tag, Share2, Loader2 } from 'lucide-react';
 import { blogPosts as fallbackPosts } from '@/config/static-data';
 
@@ -107,11 +108,14 @@ export default function BlogPostClient({ slug, initialPost = null }) {
 
         {/* Featured Image - Half screen height */}
         {(post.image_url || post.image) && (
-          <div className="w-full mb-8">
-            <img
+          <div className="relative w-full h-[50vh] mb-8">
+            <Image
               src={post.image_url || post.image}
               alt={post.title}
-              className="w-full h-[50vh] object-cover"
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover"
             />
           </div>
         )}

@@ -1,3 +1,4 @@
+import Script from 'next/script';
 import ShopPageClient from '@/components/views/ShopPage';
 import { fetchShopData } from '@/lib/shop';
 
@@ -51,11 +52,33 @@ export const revalidate = 300;
 export default async function ShopCategoryPage({ params }) {
   const { category } = await params;
   const { products, categories } = await fetchShopData({ category });
+  const meta = categoryMeta[category];
+  const categoryName = meta
+    ? meta.title.split('|')[0].trim()
+    : category.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Shop', item: `${SITE_URL}/shop` },
+      { '@type': 'ListItem', position: 3, name: categoryName, item: `${SITE_URL}/shop/${category}` },
+    ],
+  };
+
   return (
-    <ShopPageClient
-      initialCategory={category}
-      initialProducts={products}
-      initialCategories={categories}
-    />
+    <>
+      <Script
+        id="shop-category-breadcrumb-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      <ShopPageClient
+        initialCategory={category}
+        initialProducts={products}
+        initialCategories={categories}
+      />
+    </>
   );
 }

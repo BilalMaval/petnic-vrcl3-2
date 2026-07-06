@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { Search, Star, ArrowRight, Sparkles, Palette, Frame, Image as ImageIcon, Home, Shirt, Package } from 'lucide-react';
 
@@ -123,10 +124,12 @@ const PrintOnDemandPage = () => {
                 data-testid={`product-card-${product.slug}`}
               >
                 <div className="relative aspect-square overflow-hidden">
-                  <img 
-                    src={product.image_url || '/placeholder-product.jpg'} 
+                  <Image
+                    src={product.image_url || '/placeholder-product.jpg'}
                     alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   {product.badge && (
                     <span className="absolute top-3 left-3 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">
