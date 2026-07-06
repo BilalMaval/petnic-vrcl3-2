@@ -58,6 +58,8 @@ const Footer = () => {
             <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-sm">Personalize your pet's story with stunning, custom art & premium care products. Museum-grade quality with love in every detail.</p>
             <div className="space-y-2.5 text-sm">
               <a href="mailto:hello@petnicstudio.com" className="flex items-center gap-2.5 text-gray-400 hover:text-[#F97316] transition-colors"><Mail className="w-4 h-4" /><span>hello@petnicstudio.com</span></a>
+              <a href="tel:+15818918811" className="flex items-center gap-2.5 text-gray-400 hover:text-[#F97316] transition-colors"><Phone className="w-4 h-4" /><span>+1 (581) 891-8811</span></a>
+              <div className="flex items-start gap-2.5 text-gray-400"><MapPin className="w-4 h-4 mt-0.5 shrink-0" /><span>1001 S Main St Ste 12362<br />Kalispell, MT 59901</span></div>
             </div>
             <div className="flex gap-3 mt-6">
               {[{ icon: Facebook, label: 'Facebook' }, { icon: Instagram, label: 'Instagram' }, { icon: Twitter, label: 'Twitter' }, { icon: Youtube, label: 'YouTube' }].map(({ icon: Icon, label }) => (

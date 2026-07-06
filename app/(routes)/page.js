@@ -12,13 +12,13 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.petnicstudio.c
 
 export const metadata = {
   title: 'Custom Pet Portraits - Personalized Art for Every Furry Friend | Petnic Studio',
-  description: 'Create stunning custom pet portraits from your photos. Shop personalized canvas prints, framed art, mugs & more. 48,000+ 5-star reviews. Free shipping over $50. Transform your pet into art!',
+  description: 'Create stunning custom pet portraits from your photos. Shop personalized canvas prints, framed art, mugs & more. Free shipping over $50. Transform your pet into art!',
   alternates: {
     canonical: SITE_URL,
   },
   openGraph: {
     title: 'Custom Pet Portraits - Personalized Art for Every Furry Friend | Petnic Studio',
-    description: 'Create stunning custom pet portraits from your photos. Shop personalized canvas prints, framed art & more. 48,000+ 5-star reviews.',
+    description: 'Create stunning custom pet portraits from your photos. Shop personalized canvas prints, framed art, mugs & more. Free shipping over $50.',
     url: SITE_URL,
     images: [{ url: `${SITE_URL}/og-image.jpg`, width: 1200, height: 630, alt: 'Petnic Studio - Custom Pet Portraits' }],
   },
@@ -32,8 +32,18 @@ const organizationSchema = {
   url: SITE_URL,
   logo: `${SITE_URL}/petnic-logo.png`,
   description: 'Create stunning custom pet portraits from your photos. Personalized canvas prints, framed art, and more.',
+  telephone: '+1-581-891-8811',
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: '1001 S Main St Ste 12362',
+    addressLocality: 'Kalispell',
+    addressRegion: 'MT',
+    postalCode: '59901',
+    addressCountry: 'US',
+  },
   contactPoint: {
     '@type': 'ContactPoint',
+    telephone: '+1-581-891-8811',
     email: 'hello@petnicstudio.com',
     contactType: 'customer service',
   },
