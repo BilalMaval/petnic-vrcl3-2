@@ -50,6 +50,16 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
+        {/* Non-blocking Google Fonts load: preconnect early, then fetch the
+            stylesheet directly (instead of a CSS @import, which forces the
+            browser to download+parse globals.css before it even discovers
+            the font request, adding a full extra round-trip to LCP/CLS). */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        />
         {/* Google Analytics - Only load if measurement ID is set */}
         {GA_MEASUREMENT_ID && (
           <>

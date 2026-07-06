@@ -66,20 +66,33 @@ export default async function sitemap() {
     console.error('Sitemap: Error fetching blog posts', e);
   }
 
-  // Category pages
-  let categoryPages = [];
+  // Category pages — always include the known /shop/[category] routes
+  // (matches the categoryMeta map in app/(routes)/shop/[category]/page.js)
+  // so indexation never silently depends on the `categories` table being
+  // populated; merge in any additional DB-driven category slugs too.
+  const KNOWN_SHOP_CATEGORY_SLUGS = ['wall-art', 'apparel', 'home-living', 'accessories'];
+  let categoryPages = KNOWN_SHOP_CATEGORY_SLUGS.map((slug) => ({
+    url: `${baseUrl}/shop/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly',
+    priority: 0.7,
+  }));
+
   try {
     const { data: categories } = await supabase
       .from('categories')
       .select('slug, updated_at');
 
     if (categories) {
-      categoryPages = categories.map((cat) => ({
-        url: `${baseUrl}/shop?category=${cat.slug}`,
-        lastModified: new Date(cat.updated_at || new Date()),
-        changeFrequency: 'weekly',
-        priority: 0.7,
-      }));
+      for (const cat of categories) {
+        if (KNOWN_SHOP_CATEGORY_SLUGS.includes(cat.slug)) continue;
+        categoryPages.push({
+          url: `${baseUrl}/shop/${cat.slug}`,
+          lastModified: new Date(cat.updated_at || new Date()),
+          changeFrequency: 'weekly',
+          priority: 0.7,
+        });
+      }
     }
   } catch (e) {
     console.error('Sitemap: Error fetching categories', e);

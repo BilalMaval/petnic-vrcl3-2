@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Search, User, ShoppingCart, Menu, X, ChevronDown, LogOut } from 'lucide-react';
 import { navItems } from '@/config/static-data';
@@ -71,7 +72,7 @@ const Navbar = () => {
           <div className="flex items-center justify-between h-[72px]">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 group">
-              <img src="/petnic-logo.png" alt="Petnic Studio - Custom Pet Portraits" className="h-11 w-auto transition-transform group-hover:scale-105" />
+              <Image src="/petnic-logo.png" alt="Petnic Studio - Custom Pet Portraits" width={44} height={44} priority className="h-11 w-auto transition-transform group-hover:scale-105" />
             </Link>
 
             {/* Desktop Nav */}

@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Star, ShoppingCart, Heart, Upload, Check, CreditCard, Truck, Shield, ArrowLeft, Minus, Plus, X, ChevronLeft, ChevronRight, Download, ExternalLink, DollarSign, Sparkles } from 'lucide-react';
 
 // Default reference designs for POD products
@@ -189,12 +190,20 @@ const ProductDetail = ({ product, related = [] }) => {
           {/* Image Section */}
           <div className="space-y-4">
             {/* Main Image */}
-            <div className="relative rounded-2xl overflow-hidden bg-white shadow-sm">
-              <img 
-                src={uploadedImage || galleryImages[currentImageIndex]} 
-                alt={product.name} 
-                className="w-full aspect-square object-cover" 
-              />
+            <div className="relative rounded-2xl overflow-hidden bg-white shadow-sm aspect-square">
+              {uploadedImage ? (
+                // Locally-uploaded data: URL preview — next/image can't optimize data URIs.
+                <img src={uploadedImage} alt={product.name} className="w-full h-full object-cover" />
+              ) : (
+                <Image
+                  src={galleryImages[currentImageIndex]}
+                  alt={product.name}
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover"
+                />
+              )}
               {product.badge && <span className="absolute top-4 left-4 bg-[#F97316] text-white text-sm font-bold px-4 py-1.5 rounded-full">{product.badge}</span>}
               {discount > 0 && <span className="absolute top-4 right-4 bg-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-full">-{discount}% OFF</span>}
               
@@ -224,9 +233,9 @@ const ProductDetail = ({ product, related = [] }) => {
                   <button
                     key={idx}
                     onClick={() => { setCurrentImageIndex(idx); setUploadedImage(null); }}
-                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${currentImageIndex === idx ? 'border-[#F97316] ring-2 ring-[#F97316] ring-offset-2' : 'border-gray-200 hover:border-gray-300'}`}
+                    className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${currentImageIndex === idx ? 'border-[#F97316] ring-2 ring-[#F97316] ring-offset-2' : 'border-gray-200 hover:border-gray-300'}`}
                   >
-                    <img src={img} alt={`${product.name} ${idx + 1}`} className="w-full h-full object-cover" />
+                    <Image src={img} alt={`${product.name} ${idx + 1}`} fill sizes="80px" className="object-cover" />
                   </button>
                 ))}
               </div>
@@ -296,14 +305,14 @@ const ProductDetail = ({ product, related = [] }) => {
                     <button
                       key={design.id}
                       onClick={() => setSelectedDesign(selectedDesign?.id === design.id ? null : design)}
-                      className={`relative rounded-xl overflow-hidden border-2 transition-all hover:-translate-y-0.5 ${
-                        selectedDesign?.id === design.id 
-                          ? 'border-[#F97316] ring-2 ring-[#F97316] ring-offset-1' 
+                      className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all hover:-translate-y-0.5 ${
+                        selectedDesign?.id === design.id
+                          ? 'border-[#F97316] ring-2 ring-[#F97316] ring-offset-1'
                           : 'border-gray-200 hover:border-orange-200'
                       }`}
                       data-testid={`design-${design.id}`}
                     >
-                      <img src={design.image_url} alt={design.name} className="w-full aspect-square object-cover" loading="lazy" />
+                      <Image src={design.image_url} alt={design.name} fill sizes="120px" className="object-cover" />
                       {design.price_addition > 0 && (
                         <span className="absolute top-1 right-1 bg-green-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
                           +${design.price_addition}
@@ -482,8 +491,8 @@ const ProductDetail = ({ product, related = [] }) => {
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {related.map(p => (
                 <Link key={p.id} href={`/product/${p.slug}`} className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all block">
-                  <div className="relative overflow-hidden">
-                    <img src={p.image_url} alt={p.name} className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+                  <div className="relative overflow-hidden h-48">
+                    <Image src={p.image_url} alt={p.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover group-hover:scale-105 transition-transform duration-300" />
                     {p.badge && <span className="absolute top-3 left-3 bg-[#F97316] text-white text-xs font-bold px-3 py-1 rounded-full">{p.badge}</span>}
                   </div>
                   <div className="p-4">

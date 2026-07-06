@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Clock, User, Calendar, ArrowRight, Search, Tag, Loader2 } from 'lucide-react';
 import { blogPosts as fallbackPosts } from '@/config/static-data';
 
@@ -132,12 +133,13 @@ const BlogPage = () => {
               <div className="mb-12 group">
                 <Link href={`/blog/${featuredPost.slug}`} className="block">
                   <div className="grid md:grid-cols-2 gap-6 bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-shadow">
-                    <div className="overflow-hidden">
-                      <img
+                    <div className="relative overflow-hidden min-h-[300px]">
+                      <Image
                         src={featuredPost.image_url || featuredPost.image}
                         alt={featuredPost.title}
-                        className="w-full h-full min-h-[300px] object-cover group-hover:scale-105 transition-transform duration-500"
-                        loading="lazy"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     </div>
                     <div className="p-8 flex flex-col justify-center">
@@ -174,12 +176,13 @@ const BlogPage = () => {
                 {regularPosts.map((post) => (
                   <Link key={post.id} href={`/blog/${post.slug}`} className="block">
                     <article className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-orange-100 transition-all duration-300 group h-full">
-                      <div className="overflow-hidden">
-                        <img
+                      <div className="relative overflow-hidden h-48">
+                        <Image
                           src={post.image_url || post.image}
                           alt={post.title}
-                          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500"
-                          loading="lazy"
+                          fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       </div>
                       <div className="p-5">

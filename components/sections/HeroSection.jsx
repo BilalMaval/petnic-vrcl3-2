@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowRight, Star, Play } from 'lucide-react';
 import { heroImages, stats } from '@/config/static-data';
 
@@ -75,12 +76,14 @@ const HeroSection = () => {
 
           {/* Right Image */}
           <div className="relative">
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl">
-              <img
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl h-[500px] lg:h-[580px]">
+              <Image
                 src={heroImages.main}
                 alt="Custom pet portrait - adorable dogs transformed into stunning personalized artwork by Petnic Studio"
-                className="w-full h-[500px] lg:h-[580px] object-cover"
-                loading="eager"
+                fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
             </div>

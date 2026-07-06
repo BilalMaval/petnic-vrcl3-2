@@ -106,32 +106,6 @@ const faqSchema = {
   ],
 };
 
-// AggregateRating Schema
-const aggregateRatingSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'Product',
-  name: 'Custom Pet Portrait',
-  description: 'Personalized pet portrait created from your photo',
-  brand: {
-    '@type': 'Brand',
-    name: 'Petnic Studio',
-  },
-  aggregateRating: {
-    '@type': 'AggregateRating',
-    ratingValue: '4.9',
-    reviewCount: '48000',
-    bestRating: '5',
-    worstRating: '1',
-  },
-  offers: {
-    '@type': 'AggregateOffer',
-    priceCurrency: 'USD',
-    lowPrice: '29.99',
-    highPrice: '199.99',
-    offerCount: '200',
-  },
-};
-
 export default function HomePage() {
   return (
     <main>
@@ -151,12 +125,7 @@ export default function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
-      <Script
-        id="aggregate-rating-schema"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(aggregateRatingSchema) }}
-      />
-      
+
       <HeroSection />
       <TrustBadges />
       <HowItWorks />

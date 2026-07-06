@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import Script from 'next/script';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import BlogPostClient from './BlogPostClient';
 
@@ -140,5 +141,63 @@ export default async function BlogPostPage({ params }) {
     ? { ...post, full_html_page: sanitizeFullHtmlPage(post.full_html_page) }
     : post;
 
-  return <BlogPostClient slug={cleanPost.slug} initialPost={cleanPost} />;
+  const description =
+    post.excerpt ||
+    (post.content ? String(post.content).replace(/<[^>]+>/g, '').slice(0, 160) : null) ||
+    'Read expert pet care tips and guides from Petnic Studio.';
+  const canonicalUrl = `${SITE_URL}/blog/${post.slug}`;
+  const image = post.image_url || `${SITE_URL}/og-blog-default.jpg`;
+
+  const articleSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    description,
+    image: [image],
+    url: canonicalUrl,
+    datePublished: post.published_at || post.created_at,
+    dateModified: post.updated_at || post.published_at || post.created_at,
+    author: {
+      '@type': 'Person',
+      name: post.author_name || 'Petnic Studio',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Petnic Studio',
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE_URL}/petnic-logo.png`,
+      },
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': canonicalUrl,
+    },
+  };
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Blog', item: `${SITE_URL}/blog` },
+      { '@type': 'ListItem', position: 3, name: post.title, item: canonicalUrl },
+    ],
+  };
+
+  return (
+    <>
+      <Script
+        id="article-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
+      <Script
+        id="blog-breadcrumb-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      <BlogPostClient slug={cleanPost.slug} initialPost={cleanPost} />
+    </>
+  );
 }
