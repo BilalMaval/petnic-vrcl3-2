@@ -1,7 +1,7 @@
 // Static content that doesn't change frequently
 
 export const heroImages = {
-  main: 'https://images.unsplash.com/photo-1560743641-3914f2c45636?w=800&q=80',
+  main: '/hero-pet-portrait.webp',
   secondary: 'https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=800&q=80',
 };
 

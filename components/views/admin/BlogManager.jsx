@@ -268,8 +268,8 @@ export default function BlogManager({ token }) {
                 >
                   <FileCode className="w-5 h-5" />
                   <div className="text-left">
-                    <p className="font-semibold text-sm">Full HTML Page</p>
-                    <p className="text-xs opacity-75">Upload complete HTML</p>
+                    <p className="font-semibold text-sm">Full Page</p>
+                    <p className="text-xs opacity-75">Upload a complete page</p>
                   </div>
                 </button>
               </div>
@@ -294,12 +294,12 @@ export default function BlogManager({ token }) {
                 </div>
               </div>
 
-              {/* Full HTML Page Mode */}
+              {/* Full Page Mode */}
               {uploadMode === 'fullhtml' ? (
                 <div className="space-y-4 pt-4 border-t">
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <p className="text-sm text-blue-700">
-                      <strong>Full HTML Page Mode:</strong> Upload a complete HTML file. The page will render your HTML exactly as-is, with only the site's universal header and footer. Title and image are used for the blog listing card only.
+                      <strong>Full Page Mode:</strong> Upload a complete page file. It will render exactly as-is, with only the site's universal header and footer. Title and image are used for the blog listing card only.
                     </p>
                   </div>
                   
@@ -314,28 +314,28 @@ export default function BlogManager({ token }) {
                     <div><label className="text-sm font-medium text-gray-700 mb-1 block">Excerpt (for blog listing)</label><textarea rows={2} value={form.excerpt} onChange={e => setForm(f => ({...f, excerpt: e.target.value}))} placeholder="Short description for blog listing page" className="w-full p-3 border border-gray-200 rounded-lg outline-none" /></div>
                   </div>
 
-                  {/* HTML Upload */}
+                  {/* Page Upload */}
                   <div>
-                    <label className="text-sm font-medium text-gray-700 mb-1 block">Upload HTML File *</label>
+                    <label className="text-sm font-medium text-gray-700 mb-1 block">Upload Page File *</label>
                     <div className="flex gap-2">
                       <label className="flex-1 flex items-center justify-center gap-2 p-4 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#F97316] hover:bg-orange-50 transition-colors">
                         <Upload className="w-5 h-5 text-gray-400" />
-                        <span className="text-sm text-gray-500">Click to upload .html file</span>
+                        <span className="text-sm text-gray-500">Click to upload file</span>
                         <input type="file" accept=".html,.htm" onChange={handleHtmlFileUpload} className="hidden" />
                       </label>
                     </div>
                     {form.full_html_page && (
                       <p className="mt-2 text-sm text-green-600 flex items-center gap-1">
-                        <Code className="w-4 h-4" /> HTML content loaded ({form.full_html_page.length.toLocaleString()} characters)
+                        <Code className="w-4 h-4" /> Page content loaded ({form.full_html_page.length.toLocaleString()} characters)
                       </p>
                     )}
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700 mb-1 block">Or Paste HTML Code</label>
-                    <textarea 
-                      rows={12} 
-                      value={form.full_html_page} 
-                      onChange={e => setForm(f => ({...f, full_html_page: e.target.value}))} 
+                    <label className="text-sm font-medium text-gray-700 mb-1 block">Or Paste Page Code</label>
+                    <textarea
+                      rows={12}
+                      value={form.full_html_page}
+                      onChange={e => setForm(f => ({...f, full_html_page: e.target.value}))}
                       placeholder="<!DOCTYPE html>
 <html>
 <head>...</head>
