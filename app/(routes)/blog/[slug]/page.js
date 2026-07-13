@@ -7,20 +7,99 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.petnicstudio.c
 
 export const revalidate = 300;
 
+const FULL_PAGE_SCOPE = '.blog-full-page';
+
+/**
+ * Prefix every top-level selector in a CSS string with a scope selector so
+ * user-uploaded stylesheets can't leak past the article wrapper (a global
+ * `* { margin: 0 }` reset or an unscoped `h3 { ... }` rule would otherwise
+ * bleed into the site header/footer on that page). Recurses into @media /
+ * @supports blocks; leaves @keyframes, @font-face, @import etc. untouched
+ * since those aren't selector-based and are safe to keep global.
+ */
+function scopeCss(css, scope) {
+  let result = '';
+  let i = 0;
+  const len = css.length;
+
+  while (i < len) {
+    const braceIndex = css.indexOf('{', i);
+    const semiIndex = css.indexOf(';', i);
+
+    if (braceIndex === -1) {
+      result += css.slice(i);
+      break;
+    }
+    if (semiIndex !== -1 && semiIndex < braceIndex) {
+      // Statement like @import/@charset with no block — copy as-is.
+      result += css.slice(i, semiIndex + 1);
+      i = semiIndex + 1;
+      continue;
+    }
+
+    const header = css.slice(i, braceIndex).trim();
+
+    // Find the matching closing brace, respecting nesting.
+    let depth = 0;
+    let blockEnd = -1;
+    for (let k = braceIndex; k < len; k++) {
+      if (css[k] === '{') depth++;
+      else if (css[k] === '}') {
+        depth--;
+        if (depth === 0) { blockEnd = k; break; }
+      }
+    }
+    if (blockEnd === -1) {
+      result += css.slice(i);
+      break;
+    }
+    const blockContent = css.slice(braceIndex + 1, blockEnd);
+
+    if (header.startsWith('@')) {
+      const atName = (header.match(/^@([a-zA-Z-]+)/) || [])[1]?.toLowerCase();
+      if (atName === 'media' || atName === 'supports' || atName === 'document' || atName === 'layer') {
+        result += `${header} {${scopeCss(blockContent, scope)}}`;
+      } else {
+        // @keyframes, @font-face, @page, etc. — not selector-based, keep as-is.
+        result += `${header} {${blockContent}}`;
+      }
+    } else {
+      const scopedSelectors = header
+        .split(',')
+        .map((sel) => sel.trim())
+        .filter(Boolean)
+        .map((sel) => {
+          if (sel === '*' || sel === 'html' || sel === 'body' || sel === ':root') return scope;
+          if (sel.startsWith('*')) return `${scope} ${sel}`;
+          return `${scope} ${sel}`;
+        })
+        .join(', ');
+      result += `${scopedSelectors} {${blockContent}}`;
+    }
+
+    i = blockEnd + 1;
+  }
+
+  return result;
+}
+
 /**
  * Strip head-section noise from user-uploaded full-page HTML so it doesn't
  * fight the canonical/title/meta we set via Next's generateMetadata.
  * Preserves <style> blocks and stylesheet <link>s (the article's design) by
- * lifting them into the body before the head is removed.
+ * lifting them into the body before the head is removed. Style content is
+ * scoped to the article wrapper so it can never affect the rest of the site.
  */
 function sanitizeFullHtmlPage(html) {
   if (!html || typeof html !== 'string') return html;
   let out = html;
 
-  // 1. Extract <style>...</style> blocks anywhere (head or body) to preserve them.
+  // 1. Extract <style>...</style> blocks anywhere (head or body), scope their
+  //    CSS to the article wrapper, and preserve them for re-injection.
   const styleBlocks = [];
-  out = out.replace(/<style\b[\s\S]*?<\/style>/gi, (m) => {
-    styleBlocks.push(m);
+  out = out.replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gi, (m, cssContent) => {
+    const scoped = scopeCss(cssContent, FULL_PAGE_SCOPE);
+    styleBlocks.push(`<style>${scoped}</style>`);
     return '';
   });
 
