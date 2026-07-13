@@ -14,7 +14,7 @@ export async function GET(request) {
     const cleanSlug = String(slug).trim();
     let { data, error } = await supabase
       .from('blog_posts')
-      .select('*, blog_categories(id, name, slug)')
+      .select('*, blog_categories(id, name, slug), related_category:categories!blog_posts_related_category_id_fkey(id, name, slug), related_product:products!blog_posts_related_product_id_fkey(id, name, slug, image_url, price)')
       .eq('slug', cleanSlug)
       .eq('status', 'published')
       .maybeSingle();
@@ -23,7 +23,7 @@ export async function GET(request) {
     if (!data) {
       const fb = await supabase
         .from('blog_posts')
-        .select('*, blog_categories(id, name, slug)')
+        .select('*, blog_categories(id, name, slug), related_category:categories!blog_posts_related_category_id_fkey(id, name, slug), related_product:products!blog_posts_related_product_id_fkey(id, name, slug, image_url, price)')
         .ilike('slug', cleanSlug)
         .eq('status', 'published')
         .maybeSingle();
@@ -38,7 +38,7 @@ export async function GET(request) {
   // List posts
   let query = supabase
     .from('blog_posts')
-    .select('*, blog_categories(id, name, slug)')
+    .select('*, blog_categories(id, name, slug), related_category:categories!blog_posts_related_category_id_fkey(id, name, slug), related_product:products!blog_posts_related_product_id_fkey(id, name, slug, image_url, price)')
     .eq('status', 'published')
     .order('published_at', { ascending: false });
 

@@ -11,7 +11,7 @@ export async function GET(request) {
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from('blog_posts')
-    .select('*, blog_categories(id, name, slug)')
+    .select('*, blog_categories(id, name, slug), related_category:categories!blog_posts_related_category_id_fkey(id, name, slug), related_product:products!blog_posts_related_product_id_fkey(id, name, slug)')
     .order('created_at', { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -45,12 +45,17 @@ export async function POST(request) {
     read_time: body.read_time,
     full_html_page: body.full_html_page || null,
     published_at: body.status === 'published' ? new Date().toISOString() : null,
+    meta_description: body.meta_description || null,
+    tags: Array.isArray(body.tags) ? body.tags : [],
+    related_category_id: body.related_category_id || null,
+    related_product_id: body.related_product_id || null,
+    faqs: Array.isArray(body.faqs) ? body.faqs.filter(f => f.question && f.answer) : [],
   };
 
   const { data, error } = await supabase
     .from('blog_posts')
     .insert(postData)
-    .select('*, blog_categories(id, name, slug)')
+    .select('*, blog_categories(id, name, slug), related_category:categories!blog_posts_related_category_id_fkey(id, name, slug), related_product:products!blog_posts_related_product_id_fkey(id, name, slug)')
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -80,12 +85,16 @@ export async function PUT(request) {
   if (updates.status === 'published' && !updates.published_at) {
     updates.published_at = new Date().toISOString();
   }
+  if (updates.tags !== undefined) updates.tags = Array.isArray(updates.tags) ? updates.tags : [];
+  if (updates.faqs !== undefined) updates.faqs = Array.isArray(updates.faqs) ? updates.faqs.filter(f => f.question && f.answer) : [];
+  if (updates.related_category_id === '') updates.related_category_id = null;
+  if (updates.related_product_id === '') updates.related_product_id = null;
 
   const { data, error } = await supabase
     .from('blog_posts')
     .update(updates)
     .eq('id', id)
-    .select('*, blog_categories(id, name, slug)')
+    .select('*, blog_categories(id, name, slug), related_category:categories!blog_posts_related_category_id_fkey(id, name, slug), related_product:products!blog_posts_related_product_id_fkey(id, name, slug)')
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

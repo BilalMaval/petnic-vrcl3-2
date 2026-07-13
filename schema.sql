@@ -118,6 +118,25 @@ CREATE INDEX IF NOT EXISTS idx_payment_tx_email ON payment_transactions(user_ema
 ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS full_html_page TEXT;
 
 -- =============================================
+-- BLOG SEO + FAQ ENHANCEMENTS
+-- =============================================
+-- meta_description: dedicated SEO meta description (falls back to excerpt if empty)
+-- tags: comma-entered, stored as a text array for filtering/display
+-- related_category_id / related_product_id: optional single link shown as a
+--   "Shop the Look" style CTA under the article (either/or, not both required)
+-- faqs: ordered array of { question, answer } objects rendered after the
+--   article and emitted as FAQPage JSON-LD for rich results
+ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS meta_description TEXT;
+ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}';
+ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS related_category_id UUID REFERENCES categories(id) ON DELETE SET NULL;
+ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS related_product_id UUID REFERENCES products(id) ON DELETE SET NULL;
+ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS faqs JSONB DEFAULT '[]';
+
+CREATE INDEX IF NOT EXISTS idx_blog_posts_related_category ON blog_posts(related_category_id);
+CREATE INDEX IF NOT EXISTS idx_blog_posts_related_product ON blog_posts(related_product_id);
+CREATE INDEX IF NOT EXISTS idx_blog_posts_tags ON blog_posts USING GIN(tags);
+
+-- =============================================
 -- FIX: ALLOW PRODUCT DELETION WHEN ORDERS EXIST
 -- =============================================
 

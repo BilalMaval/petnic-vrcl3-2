@@ -1,21 +1,26 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, X, Upload, Search, Eye, FileText, Image as ImageIcon, Grid, List, Code, FileCode } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Upload, Search, Eye, FileText, Image as ImageIcon, Grid, List, Code, FileCode, HelpCircle, Tag as TagIcon, Link2 } from 'lucide-react';
+
+const emptyForm = {
+  title: '', slug: '', excerpt: '', content: '', image_url: '',
+  author_name: '', author_role: '', category_id: '', featured: false, status: 'draft', read_time: '',
+  full_html_page: '',
+  meta_description: '', tags: '', related_category_id: '', related_product_id: '', faqs: [],
+};
 
 export default function BlogManager({ token }) {
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [productCategories, setProductCategories] = useState([]);
+  const [products, setProducts] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState('grid');
   const [uploadMode, setUploadMode] = useState('standard'); // 'standard' or 'fullhtml'
-  const [form, setForm] = useState({
-    title: '', slug: '', excerpt: '', content: '', image_url: '',
-    author_name: '', author_role: '', category_id: '', featured: false, status: 'draft', read_time: '',
-    full_html_page: ''
-  });
+  const [form, setForm] = useState(emptyForm);
   const [categoryForm, setCategoryForm] = useState({ name: '', description: '' });
   const [editingCategory, setEditingCategory] = useState(null);
 
@@ -24,6 +29,8 @@ export default function BlogManager({ token }) {
   const load = () => {
     fetch('/api/admin/blog', { headers }).then(r => r.json()).then(d => setPosts(d.posts || []));
     fetch('/api/admin/blog/categories', { headers }).then(r => r.json()).then(d => setCategories(d.categories || []));
+    fetch('/api/admin/categories', { headers }).then(r => r.json()).then(d => setProductCategories(d.categories || []));
+    fetch('/api/admin/products', { headers }).then(r => r.json()).then(d => setProducts(d.products || []));
   };
 
   useEffect(load, [token]);
@@ -32,11 +39,16 @@ export default function BlogManager({ token }) {
     e.preventDefault();
     const body = { ...form };
     if (editing) body.id = editing.id;
-    
+
     // If full HTML mode, clear content field (but keep image_url for blog card)
     if (uploadMode === 'fullhtml' && form.full_html_page) {
       body.content = '';
     }
+
+    // Tags come in as a comma-separated string in the form; store as an array.
+    body.tags = typeof form.tags === 'string'
+      ? form.tags.split(',').map(t => t.trim()).filter(Boolean)
+      : (form.tags || []);
 
     try {
       const res = await fetch('/api/admin/blog', { method: editing ? 'PUT' : 'POST', headers, body: JSON.stringify(body) });
@@ -85,11 +97,7 @@ export default function BlogManager({ token }) {
   };
 
   const resetForm = () => {
-    setForm({
-      title: '', slug: '', excerpt: '', content: '', image_url: '',
-      author_name: '', author_role: '', category_id: '', featured: false, status: 'draft', read_time: '',
-      full_html_page: ''
-    });
+    setForm(emptyForm);
     setUploadMode('standard');
   };
 
@@ -98,12 +106,25 @@ export default function BlogManager({ token }) {
       title: p.title, slug: p.slug, excerpt: p.excerpt || '', content: p.content || '',
       image_url: p.image_url || '', author_name: p.author_name || '', author_role: p.author_role || '',
       category_id: p.category_id || '', featured: p.featured, status: p.status, read_time: p.read_time || '',
-      full_html_page: p.full_html_page || ''
+      full_html_page: p.full_html_page || '',
+      meta_description: p.meta_description || '',
+      tags: Array.isArray(p.tags) ? p.tags.join(', ') : '',
+      related_category_id: p.related_category_id || '',
+      related_product_id: p.related_product_id || '',
+      faqs: Array.isArray(p.faqs) ? p.faqs : [],
     });
     setUploadMode(p.full_html_page ? 'fullhtml' : 'standard');
     setEditing(p);
     setShowForm(true);
   };
+
+  // FAQ repeater handlers
+  const addFaq = () => setForm(f => ({ ...f, faqs: [...(f.faqs || []), { question: '', answer: '' }] }));
+  const updateFaq = (index, key, value) => setForm(f => ({
+    ...f,
+    faqs: f.faqs.map((item, i) => i === index ? { ...item, [key]: value } : item),
+  }));
+  const removeFaq = (index) => setForm(f => ({ ...f, faqs: f.faqs.filter((_, i) => i !== index) }));
 
   // Category handlers
   const handleCategorySubmit = async (e) => {
@@ -342,6 +363,90 @@ export default function BlogManager({ token }) {
                   <div><label className="text-sm font-medium text-gray-700 mb-1 block">Author Role</label><input value={form.author_role} onChange={e => setForm(f => ({...f, author_role: e.target.value}))} placeholder="e.g. Veterinarian" className="w-full p-3 border border-gray-200 rounded-lg outline-none" /></div>
                 </div>
               )}
+
+              {/* SEO & Discovery */}
+              <div className="space-y-4 pt-4 border-t">
+                <p className="text-sm font-semibold text-[#1A1A2E] flex items-center gap-2"><Search className="w-4 h-4 text-[#F97316]" />SEO & Discovery</p>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">Meta Description</label>
+                  <textarea
+                    rows={2}
+                    maxLength={160}
+                    value={form.meta_description}
+                    onChange={e => setForm(f => ({...f, meta_description: e.target.value}))}
+                    placeholder="Shown in Google search results (max 160 characters). Falls back to excerpt if left blank."
+                    className="w-full p-3 border border-gray-200 rounded-lg outline-none text-sm"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">{(form.meta_description || '').length}/160</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-1"><TagIcon className="w-3.5 h-3.5" />Tags</label>
+                  <input
+                    value={form.tags}
+                    onChange={e => setForm(f => ({...f, tags: e.target.value}))}
+                    placeholder="comma, separated, tags, e.g. pet-photography, grooming, gift-ideas"
+                    className="w-full p-3 border border-gray-200 rounded-lg outline-none text-sm"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-1"><Link2 className="w-3.5 h-3.5" />Related Category</label>
+                    <select
+                      value={form.related_category_id}
+                      onChange={e => setForm(f => ({...f, related_category_id: e.target.value, related_product_id: e.target.value ? '' : f.related_product_id}))}
+                      className="w-full p-3 border border-gray-200 rounded-lg outline-none text-sm"
+                    >
+                      <option value="">None</option>
+                      {productCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-1"><Link2 className="w-3.5 h-3.5" />Related Product</label>
+                    <select
+                      value={form.related_product_id}
+                      onChange={e => setForm(f => ({...f, related_product_id: e.target.value, related_category_id: e.target.value ? '' : f.related_category_id}))}
+                      className="w-full p-3 border border-gray-200 rounded-lg outline-none text-sm"
+                    >
+                      <option value="">None</option>
+                      {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-400">Choose either a related product or category — it's shown as a "Shop This" card at the end of the article.</p>
+              </div>
+
+              {/* FAQs */}
+              <div className="space-y-3 pt-4 border-t">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-[#1A1A2E] flex items-center gap-2"><HelpCircle className="w-4 h-4 text-[#F97316]" />FAQs (shown after the article)</p>
+                  <button type="button" onClick={addFaq} className="flex items-center gap-1 text-sm text-[#F97316] font-semibold hover:underline">
+                    <Plus className="w-3.5 h-3.5" />Add FAQ
+                  </button>
+                </div>
+                {(form.faqs || []).length === 0 && (
+                  <p className="text-xs text-gray-400">No FAQs added yet. FAQs appear as an accordion under the article and are marked up for Google's FAQ rich results.</p>
+                )}
+                {(form.faqs || []).map((faq, i) => (
+                  <div key={i} className="bg-gray-50 rounded-lg p-3 space-y-2">
+                    <div className="flex items-start gap-2">
+                      <input
+                        value={faq.question}
+                        onChange={e => updateFaq(i, 'question', e.target.value)}
+                        placeholder="Question"
+                        className="flex-1 p-2.5 border border-gray-200 rounded-lg outline-none text-sm"
+                      />
+                      <button type="button" onClick={() => removeFaq(i)} className="p-2.5 text-gray-400 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>
+                    </div>
+                    <textarea
+                      rows={2}
+                      value={faq.answer}
+                      onChange={e => updateFaq(i, 'answer', e.target.value)}
+                      placeholder="Answer"
+                      className="w-full p-2.5 border border-gray-200 rounded-lg outline-none text-sm"
+                    />
+                  </div>
+                ))}
+              </div>
 
               <div className="pt-4 border-t">
                 <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.featured} onChange={e => setForm(f => ({...f, featured: e.target.checked}))} className="rounded" />Featured Post</label>

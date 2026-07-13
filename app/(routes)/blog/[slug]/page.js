@@ -68,7 +68,7 @@ async function fetchPostBySlug(slug) {
 
   let { data } = await supabase
     .from('blog_posts')
-    .select('*, blog_categories(id, name, slug)')
+    .select('*, blog_categories(id, name, slug), related_category:categories!blog_posts_related_category_id_fkey(id, name, slug), related_product:products!blog_posts_related_product_id_fkey(id, name, slug, image_url, price)')
     .eq('slug', clean)
     .eq('status', 'published')
     .maybeSingle();
@@ -77,7 +77,7 @@ async function fetchPostBySlug(slug) {
     // Tolerate legacy slugs with different casing.
     const fb = await supabase
       .from('blog_posts')
-      .select('*, blog_categories(id, name, slug)')
+      .select('*, blog_categories(id, name, slug), related_category:categories!blog_posts_related_category_id_fkey(id, name, slug), related_product:products!blog_posts_related_product_id_fkey(id, name, slug, image_url, price)')
       .ilike('slug', clean)
       .eq('status', 'published')
       .maybeSingle();
@@ -101,6 +101,7 @@ export async function generateMetadata({ params }) {
   }
 
   const description =
+    post.meta_description ||
     post.excerpt ||
     (post.content ? String(post.content).replace(/<[^>]+>/g, '').slice(0, 160) : null) ||
     'Read expert pet care tips and guides from Petnic Studio.';
@@ -111,6 +112,7 @@ export async function generateMetadata({ params }) {
   return {
     title: `${post.title} | Petnic Studio Blog`,
     description,
+    keywords: post.tags?.length ? post.tags.join(', ') : undefined,
     alternates: { canonical: canonicalUrl },
     openGraph: {
       title: post.title,
@@ -142,11 +144,13 @@ export default async function BlogPostPage({ params }) {
     : post;
 
   const description =
+    post.meta_description ||
     post.excerpt ||
     (post.content ? String(post.content).replace(/<[^>]+>/g, '').slice(0, 160) : null) ||
     'Read expert pet care tips and guides from Petnic Studio.';
   const canonicalUrl = `${SITE_URL}/blog/${post.slug}`;
   const image = post.image_url || `${SITE_URL}/og-blog-default.jpg`;
+  const faqs = Array.isArray(post.faqs) ? post.faqs.filter(f => f?.question && f?.answer) : [];
 
   const articleSchema = {
     '@context': 'https://schema.org',
@@ -185,6 +189,16 @@ export default async function BlogPostPage({ params }) {
     ],
   };
 
+  const faqSchema = faqs.length > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((f) => ({
+      '@type': 'Question',
+      name: f.question,
+      acceptedAnswer: { '@type': 'Answer', text: f.answer },
+    })),
+  } : null;
+
   return (
     <>
       <Script
@@ -197,6 +211,13 @@ export default async function BlogPostPage({ params }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
+      {faqSchema && (
+        <Script
+          id="blog-faq-schema"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      )}
       <BlogPostClient slug={cleanPost.slug} initialPost={cleanPost} />
     </>
   );

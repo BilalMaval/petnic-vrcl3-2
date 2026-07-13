@@ -2,8 +2,81 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Clock, User, Calendar, ArrowLeft, Tag, Share2, Loader2 } from 'lucide-react';
+import { Clock, User, Calendar, ArrowLeft, Tag, Share2, Loader2, ChevronDown, ShoppingBag } from 'lucide-react';
 import { blogPosts as fallbackPosts } from '@/config/static-data';
+
+function FaqAccordion({ faqs }) {
+  const [openIndex, setOpenIndex] = useState(0);
+  if (!faqs?.length) return null;
+  return (
+    <div className="px-4 sm:px-6 lg:px-12 xl:px-20 mb-12">
+      <div className="max-w-3xl">
+        <h2 className="text-2xl font-bold text-[#1A1A2E] mb-6" style={{ fontFamily: 'Playfair Display, serif' }}>
+          Frequently Asked Questions
+        </h2>
+        <div className="space-y-3">
+          {faqs.map((faq, i) => (
+            <div key={i} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setOpenIndex(openIndex === i ? -1 : i)}
+                className="w-full flex items-center justify-between gap-4 p-4 text-left"
+              >
+                <span className="font-semibold text-[#1A1A2E]" style={{ fontFamily: 'Inter, sans-serif' }}>{faq.question}</span>
+                <ChevronDown className={`w-5 h-5 text-[#F97316] shrink-0 transition-transform ${openIndex === i ? 'rotate-180' : ''}`} />
+              </button>
+              {openIndex === i && (
+                <div className="px-4 pb-4 text-sm text-[#4A4A68] leading-relaxed" style={{ fontFamily: 'Inter, sans-serif' }}>
+                  {faq.answer}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RelatedCta({ post }) {
+  const product = post.related_product;
+  const category = post.related_category;
+  if (!product && !category) return null;
+
+  const href = product ? `/product/${product.slug}` : `/shop/${category.slug}`;
+  const label = product ? product.name : category.name;
+  const imageUrl = product?.image_url;
+
+  return (
+    <div className="px-4 sm:px-6 lg:px-12 xl:px-20 mb-12">
+      <Link
+        href={href}
+        className="max-w-3xl flex items-center gap-4 bg-white border border-gray-200 rounded-xl p-4 hover:border-[#F97316] hover:shadow-md transition-all group"
+      >
+        {imageUrl ? (
+          <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0">
+            <Image src={imageUrl} alt={label} fill sizes="64px" className="object-cover" />
+          </div>
+        ) : (
+          <div className="w-16 h-16 rounded-lg bg-orange-50 flex items-center justify-center shrink-0">
+            <ShoppingBag className="w-6 h-6 text-[#F97316]" />
+          </div>
+        )}
+        <div className="flex-1">
+          <p className="text-xs text-[#F97316] font-semibold uppercase tracking-wider mb-0.5" style={{ fontFamily: 'Inter, sans-serif' }}>
+            {product ? 'Featured Product' : 'Shop This Category'}
+          </p>
+          <p className="font-bold text-[#1A1A2E] group-hover:text-[#F97316] transition-colors" style={{ fontFamily: 'Playfair Display, serif' }}>
+            {label}
+          </p>
+        </div>
+        {product?.price != null && (
+          <span className="text-lg font-bold text-[#F97316]">${product.price}</span>
+        )}
+      </Link>
+    </div>
+  );
+}
 
 export default function BlogPostClient({ slug, initialPost = null }) {
   const [post, setPost] = useState(initialPost);
@@ -65,14 +138,16 @@ export default function BlogPostClient({ slug, initialPost = null }) {
     );
   }
 
-  // If full_html_page is provided, render ONLY the HTML content (header/footer come from layout)
+  // If full_html_page is provided, render the HTML content plus FAQ/related sections
   if (post.full_html_page) {
     return (
-      <main className="min-h-screen" data-testid="blog-post-page">
-        <div 
+      <main className="min-h-screen bg-[#FAFAFA]" data-testid="blog-post-page">
+        <div
           className="blog-full-page w-full"
           dangerouslySetInnerHTML={{ __html: post.full_html_page }}
         />
+        <RelatedCta post={post} />
+        <FaqAccordion faqs={post.faqs} />
       </main>
     );
   }
@@ -103,6 +178,15 @@ export default function BlogPostClient({ slug, initialPost = null }) {
               <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {formatDate(post.published_at) || post.date}</span>
               <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> {post.read_time || post.readTime}</span>
             </div>
+            {post.tags?.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-4">
+                {post.tags.map((tag) => (
+                  <span key={tag} className="text-xs font-medium bg-orange-50 text-[#F97316] px-3 py-1 rounded-full" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
           </header>
         </div>
 
@@ -127,15 +211,19 @@ export default function BlogPostClient({ slug, initialPost = null }) {
           dangerouslySetInnerHTML={{ __html: post.content || `<p>${post.excerpt}</p>` }}
         />
 
+        <RelatedCta post={post} />
+
         {/* Share */}
         <div className="px-4 sm:px-6 lg:px-12 xl:px-20">
-          <div className="flex items-center gap-4 pt-8 border-t border-gray-200">
+          <div className="flex items-center gap-4 pt-8 pb-12 border-t border-gray-200">
             <span className="font-semibold text-[#1A1A2E]">Share this article:</span>
             <button className="p-2 bg-gray-100 rounded-lg hover:bg-[#F97316] hover:text-white transition-colors">
               <Share2 className="w-5 h-5" />
             </button>
           </div>
         </div>
+
+        <FaqAccordion faqs={post.faqs} />
       </article>
     </main>
   );
