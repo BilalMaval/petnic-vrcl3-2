@@ -2,7 +2,6 @@ import '@/styles/globals.css';
 import Script from 'next/script';
 import LayoutWrapper from '@/components/layout/LayoutWrapper';
 
-const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.petnicstudio.com';
 
 export const metadata = {
@@ -71,25 +70,9 @@ export default function RootLayout({ children }) {
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&family=Inter:wght@300;400;500;600;700;800;900&display=swap"
         />
-        {/* Google Analytics - Only load if measurement ID is set */}
-        {GA_MEASUREMENT_ID && (
-          <>
-            <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
-              strategy="afterInteractive"
-            />
-            <Script id="google-analytics" strategy="afterInteractive">
-              {`
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('js', new Date());
-                gtag('config', '${GA_MEASUREMENT_ID}', {
-                  page_path: window.location.pathname,
-                });
-              `}
-            </Script>
-          </>
-        )}
+        {/* Google Analytics (GA4) is managed entirely through GTM-5793BFCL
+            above - do not add a direct gtag.js snippet here, it would fire
+            GA4 twice (once from this script, once from GTM's own GA4 tag). */}
       </head>
       <body>
         {/* Google Tag Manager (noscript) */}
