@@ -14,7 +14,7 @@ const emptyForm = () => ({
   name: '',
   input_type: 'select',
   scope: 'global',
-  category_id: '',
+  category_ids: [],
   is_required: false,
   is_active: true,
   sort_order: '0',
@@ -80,7 +80,7 @@ export default function VariationsManager({ token }) {
       name: g.name,
       input_type: g.input_type,
       scope: g.scope,
-      category_id: g.category_id || '',
+      category_ids: (g.category_ids && g.category_ids.length ? g.category_ids : (g.category_id ? [g.category_id] : [])),
       is_required: !!g.is_required,
       is_active: g.is_active !== false,
       sort_order: String(g.sort_order ?? 0),
@@ -138,6 +138,15 @@ export default function VariationsManager({ token }) {
     }));
   };
 
+  const toggleCategory = (id) => {
+    setForm(f => ({
+      ...f,
+      category_ids: f.category_ids.includes(id)
+        ? f.category_ids.filter(cid => cid !== id)
+        : [...f.category_ids, id],
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -149,8 +158,8 @@ export default function VariationsManager({ token }) {
       setError('Add at least one option (e.g. "Small", "Red", "Canvas Frame").');
       return;
     }
-    if (form.scope === 'category' && !form.category_id) {
-      setError('Choose a category for a category-scoped variation.');
+    if (form.scope === 'category' && form.category_ids.length === 0) {
+      setError('Choose at least one category for a category-scoped variation.');
       return;
     }
     if (form.scope === 'product' && form.product_ids.length === 0) {
@@ -162,12 +171,12 @@ export default function VariationsManager({ token }) {
       name: form.name.trim(),
       input_type: form.input_type,
       scope: form.scope,
-      category_id: form.scope === 'category' ? form.category_id : null,
       is_required: form.is_required,
       is_active: form.is_active,
       sort_order: parseInt(form.sort_order || '0'),
       options: cleanOptions,
       product_ids: form.scope === 'product' ? form.product_ids : [],
+      category_ids: form.scope === 'category' ? form.category_ids : [],
     };
     if (editing) body.id = editing.id;
 
@@ -204,7 +213,9 @@ export default function VariationsManager({ token }) {
       return <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700"><Sparkles className="w-3 h-3" />All Categories</span>;
     }
     if (g.scope === 'category') {
-      return <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700"><FolderTree className="w-3 h-3" />{g.categories?.name || 'Category'}</span>;
+      const names = (g.categories || []).map(c => c.name);
+      const label = names.length === 0 ? 'Category' : names.length === 1 ? names[0] : `${names.length} categories`;
+      return <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700" title={names.join(', ')}><FolderTree className="w-3 h-3" />{label}</span>;
     }
     return <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-700"><Package className="w-3 h-3" />{(g.products || []).length} product{(g.products || []).length === 1 ? '' : 's'}</span>;
   };
@@ -354,11 +365,18 @@ export default function VariationsManager({ token }) {
                 </div>
 
                 {form.scope === 'category' && (
-                  <div className="mt-3">
-                    <select required value={form.category_id} onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))} className="w-full p-3 border border-gray-200 rounded-lg outline-none">
-                      <option value="">Select a category...</option>
-                      {categories.map(c => <option key={c.id} value={c.id}>{c.name} {c.collections?.name ? `(${c.collections.name})` : ''}</option>)}
-                    </select>
+                  <div className="mt-3 border border-gray-200 rounded-xl p-3">
+                    <p className="text-xs text-gray-500 mb-2">{form.category_ids.length} categor{form.category_ids.length === 1 ? 'y' : 'ies'} selected</p>
+                    <div className="max-h-40 overflow-y-auto space-y-1">
+                      {categories.length === 0 && <p className="text-sm text-gray-400 py-4 text-center">No categories found</p>}
+                      {categories.map(c => (
+                        <label key={c.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+                          <input type="checkbox" checked={form.category_ids.includes(c.id)} onChange={() => toggleCategory(c.id)} className="w-4 h-4 accent-[#F97316]" />
+                          <span className="text-sm text-[#1A1A2E]">{c.name}</span>
+                          {c.collections?.name && <span className="text-xs text-gray-400 ml-auto">{c.collections.name}</span>}
+                        </label>
+                      ))}
+                    </div>
                   </div>
                 )}
 

@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, X, Upload, Search, Grid, List, Package, Download, Truck, Star, Eye, Image as ImageIcon } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Upload, Search, Grid, List, Package, Download, Truck, Star, Eye, Image as ImageIcon, Sliders, Sparkles, FolderTree } from 'lucide-react';
 
 const COLLECTIONS = [
   { slug: 'pod', name: 'Print on Demand' },
@@ -8,22 +8,27 @@ const COLLECTIONS = [
   { slug: 'petcare', name: 'Pet Care' },
 ];
 
+const emptyForm = () => ({
+  name: '', description: '', price: '', original_price: '', image_url: '', badge: '',
+  rating: '0', review_count: '0', collection_id: '', category_id: '', in_stock: true,
+  featured: false, customizable: false, file_format: '', file_size: '', ingredients: '',
+  weight: '', download_file_url: '', is_free: false, supplier_sku: '', supplier_name: '', supplier_url: '',
+  gallery_urls: [],
+  meta_title: '', meta_description: '',
+  variation_overrides: [],
+});
+
 export default function ProductsManager({ token }) {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [collections, setCollections] = useState([]);
+  const [variationGroups, setVariationGroups] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [filter, setFilter] = useState('');
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState('grid');
-  const [form, setForm] = useState({
-    name: '', description: '', price: '', original_price: '', image_url: '', badge: '',
-    rating: '0', review_count: '0', collection_id: '', category_id: '', in_stock: true,
-    featured: false, customizable: false, file_format: '', file_size: '', ingredients: '',
-    weight: '', download_file_url: '', is_free: false, supplier_sku: '', supplier_name: '', supplier_url: '',
-    gallery_urls: []
-  });
+  const [form, setForm] = useState(emptyForm());
 
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
@@ -31,9 +36,37 @@ export default function ProductsManager({ token }) {
     fetch('/api/admin/products' + (filter ? `?collection=${filter}` : ''), { headers }).then(r => r.json()).then(d => setProducts(d.products || []));
     fetch('/api/admin/categories', { headers }).then(r => r.json()).then(d => setCategories(d.categories || []));
     fetch('/api/collections').then(r => r.json()).then(d => setCollections(d.collections || []));
+    fetch('/api/admin/variations', { headers }).then(r => r.json()).then(d => setVariationGroups(d.groups || []));
   };
 
   useEffect(load, [token, filter]);
+
+  // Whether a variation group would apply to the product currently being
+  // edited/created by default (before any explicit per-product override).
+  const groupDefaultApplies = (group) => {
+    if (group.scope === 'global') return true;
+    if (group.scope === 'category') return (group.category_ids || []).includes(form.category_id);
+    if (group.scope === 'product') return !!editing && (group.products || []).some(p => p.id === editing.id);
+    return false;
+  };
+
+  const isGroupChecked = (group) => {
+    const override = form.variation_overrides.find(o => o.variation_group_id === group.id);
+    return override ? override.included : groupDefaultApplies(group);
+  };
+
+  const toggleVariationGroup = (group) => {
+    const defaultApplies = groupDefaultApplies(group);
+    const currentlyChecked = isGroupChecked(group);
+    const nextChecked = !currentlyChecked;
+    setForm(f => {
+      const withoutThis = f.variation_overrides.filter(o => o.variation_group_id !== group.id);
+      // Only store an override when it actually deviates from the default -
+      // keeps the saved set minimal and matches how the default resolution works.
+      if (nextChecked === defaultApplies) return { ...f, variation_overrides: withoutThis };
+      return { ...f, variation_overrides: [...withoutThis, { variation_group_id: group.id, included: nextChecked }] };
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -95,13 +128,7 @@ export default function ProductsManager({ token }) {
     setForm(f => ({ ...f, gallery_urls: f.gallery_urls.filter((_, i) => i !== index) }));
   };
 
-  const resetForm = () => setForm({
-    name: '', description: '', price: '', original_price: '', image_url: '', badge: '',
-    rating: '0', review_count: '0', collection_id: '', category_id: '', in_stock: true,
-    featured: false, customizable: false, file_format: '', file_size: '', ingredients: '',
-    weight: '', download_file_url: '', is_free: false, supplier_sku: '', supplier_name: '', supplier_url: '',
-    gallery_urls: []
-  });
+  const resetForm = () => setForm(emptyForm());
 
   const startEdit = (p) => {
     setForm({
@@ -113,7 +140,9 @@ export default function ProductsManager({ token }) {
       file_size: p.file_size || '', ingredients: p.ingredients || '', weight: p.weight || '',
       download_file_url: p.download_file_url || '', is_free: p.is_free || false,
       supplier_sku: p.supplier_sku || '', supplier_name: p.supplier_name || '', supplier_url: p.supplier_url || '',
-      gallery_urls: p.gallery_urls || []
+      gallery_urls: p.gallery_urls || [],
+      meta_title: p.meta_title || '', meta_description: p.meta_description || '',
+      variation_overrides: (p.product_variation_overrides || []).map(o => ({ variation_group_id: o.variation_group_id, included: o.included })),
     });
     setEditing(p);
     setShowForm(true);
@@ -378,6 +407,67 @@ export default function ProductsManager({ token }) {
                   <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.featured} onChange={e => setForm(f => ({...f, featured: e.target.checked}))} className="rounded" />Featured</label>
                 </div>
               </div>
+
+              {/* SEO */}
+              <div className="space-y-4 pt-4 border-t">
+                <p className="text-sm font-semibold text-[#1A1A2E] flex items-center gap-2"><Search className="w-4 h-4 text-[#F97316]" />SEO</p>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">Meta Title</label>
+                  <input
+                    maxLength={70}
+                    value={form.meta_title}
+                    onChange={e => setForm(f => ({...f, meta_title: e.target.value}))}
+                    placeholder="Shown as the page title in search results. Falls back to the product name if left blank."
+                    className="w-full p-3 border border-gray-200 rounded-lg outline-none text-sm"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">{(form.meta_title || '').length}/70</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">Meta Description</label>
+                  <textarea
+                    rows={2}
+                    maxLength={160}
+                    value={form.meta_description}
+                    onChange={e => setForm(f => ({...f, meta_description: e.target.value}))}
+                    placeholder="Shown in Google search results (max 160 characters). Falls back to the product description if left blank."
+                    className="w-full p-3 border border-gray-200 rounded-lg outline-none text-sm"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">{(form.meta_description || '').length}/160</p>
+                </div>
+              </div>
+
+              {/* Variations */}
+              <div className="space-y-3 pt-4 border-t">
+                <p className="text-sm font-semibold text-[#1A1A2E] flex items-center gap-2"><Sliders className="w-4 h-4 text-[#F97316]" />Variations</p>
+                <p className="text-xs text-gray-500">
+                  Variation groups already checked apply by default (from that group's "All Categories" / "Specific Category" / "Specific Products" setup). Check or uncheck any group to override it for this product only.
+                </p>
+                {variationGroups.length === 0 ? (
+                  <p className="text-sm text-gray-400">No variation groups created yet. Add some in the Variations tab.</p>
+                ) : (
+                  <div className="border border-gray-200 rounded-xl divide-y divide-gray-100 max-h-56 overflow-y-auto">
+                    {variationGroups.map(g => {
+                      const checked = isGroupChecked(g);
+                      const isDefault = groupDefaultApplies(g);
+                      return (
+                        <label key={g.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer">
+                          <input type="checkbox" checked={checked} onChange={() => toggleVariationGroup(g)} className="w-4 h-4 accent-[#F97316]" />
+                          <div className="flex-1">
+                            <span className="text-sm font-medium text-[#1A1A2E]">{g.name}</span>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              {g.scope === 'global' && <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700"><Sparkles className="w-2.5 h-2.5" />All Categories</span>}
+                              {g.scope === 'category' && <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700"><FolderTree className="w-2.5 h-2.5" />Category</span>}
+                              {g.scope === 'product' && <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-700"><Package className="w-2.5 h-2.5" />Specific Products</span>}
+                              {checked !== isDefault && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-yellow-100 text-yellow-700">Overridden for this product</span>}
+                            </div>
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
               <div className="flex justify-end gap-3 pt-4 border-t">
                 <button type="button" onClick={() => { setShowForm(false); setEditing(null); }} className="px-6 py-2.5 border border-gray-200 rounded-lg text-sm hover:bg-gray-50">Cancel</button>
                 <button type="submit" className="px-6 py-2.5 bg-[#F97316] text-white rounded-lg text-sm font-semibold hover:bg-[#EA6C10]">{editing ? 'Update' : 'Create'} Product</button>

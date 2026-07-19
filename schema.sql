@@ -202,6 +202,46 @@ CREATE INDEX IF NOT EXISTS idx_variation_options_group ON variation_options(vari
 CREATE INDEX IF NOT EXISTS idx_variation_group_products_product ON variation_group_products(product_id);
 
 -- =============================================
+-- MULTI-CATEGORY VARIATION GROUPS + PER-PRODUCT OVERRIDES
+-- =============================================
+-- A category-scoped variation group can now apply to several categories at
+-- once instead of exactly one. The legacy single `category_id` column is
+-- kept (existing rows are backfilled into the join table below) but is no
+-- longer authoritative once a group has rows here.
+CREATE TABLE IF NOT EXISTS variation_group_categories (
+  variation_group_id UUID NOT NULL REFERENCES variation_groups(id) ON DELETE CASCADE,
+  category_id UUID NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+  PRIMARY KEY (variation_group_id, category_id)
+);
+CREATE INDEX IF NOT EXISTS idx_variation_group_categories_category ON variation_group_categories(category_id);
+CREATE INDEX IF NOT EXISTS idx_variation_group_categories_group ON variation_group_categories(variation_group_id);
+
+INSERT INTO variation_group_categories (variation_group_id, category_id)
+SELECT id, category_id FROM variation_groups WHERE scope = 'category' AND category_id IS NOT NULL
+ON CONFLICT DO NOTHING;
+
+-- The old CHECK required category_id to be set for scope='category'; that's
+-- no longer true now that categories live in the join table above.
+ALTER TABLE variation_groups DROP CONSTRAINT IF EXISTS variation_category_requires_id;
+
+-- Per-product override: lets an admin force a specific variation group ON or
+-- OFF for one product, regardless of what its scope (global/category/product)
+-- would normally resolve to. Absence of a row = use the default resolution.
+CREATE TABLE IF NOT EXISTS product_variation_overrides (
+  product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  variation_group_id UUID NOT NULL REFERENCES variation_groups(id) ON DELETE CASCADE,
+  included BOOLEAN NOT NULL,
+  PRIMARY KEY (product_id, variation_group_id)
+);
+CREATE INDEX IF NOT EXISTS idx_product_variation_overrides_product ON product_variation_overrides(product_id);
+
+-- =============================================
+-- PRODUCT SEO FIELDS
+-- =============================================
+ALTER TABLE products ADD COLUMN IF NOT EXISTS meta_title TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS meta_description TEXT;
+
+-- =============================================
 -- SEED DATA
 -- =============================================
 

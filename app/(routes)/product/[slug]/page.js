@@ -10,20 +10,37 @@ export const revalidate = 300;
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const supabase = getSupabaseAdmin();
-  const { data: product } = await supabase.from('products').select('name, description, price, image_url').eq('slug', slug).single();
+  const { data: product } = await supabase
+    .from('products')
+    .select('name, description, price, image_url, meta_title, meta_description')
+    .eq('slug', slug)
+    .single();
   const name = product?.name || slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  const title = product?.meta_title || `${name} - Custom Pet Product | Petnic Studio`;
+  const description =
+    product?.meta_description ||
+    product?.description?.slice(0, 155) ||
+    `Shop ${name} at Petnic Studio. Custom personalized pet products with free shipping over $50.`;
+  const canonicalUrl = `${SITE_URL}/product/${slug}`;
+
   return {
-    title: `${name} - Custom Pet Product | Petnic Studio`,
-    description: product?.description?.slice(0, 155) || `Shop ${name} at Petnic Studio. Custom personalized pet products with free shipping over $50.`,
+    title,
+    description,
     alternates: {
-      canonical: `${SITE_URL}/product/${slug}`,
+      canonical: canonicalUrl,
     },
     openGraph: {
-      title: `${name} | Petnic Studio`,
-      description: product?.description?.slice(0, 155) || `Shop ${name} at Petnic Studio.`,
-      url: `${SITE_URL}/product/${slug}`,
-      images: product?.image_url ? [{ url: product.image_url, alt: name }] : [],
+      title,
+      description,
+      url: canonicalUrl,
+      images: product?.image_url ? [{ url: product.image_url, width: 1200, height: 1200, alt: name }] : [],
       type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: product?.image_url ? [product.image_url] : [],
     },
   };
 }
@@ -50,13 +67,16 @@ export default async function ProductPage({ params }) {
   }
 
   // Product Schema
+  const productImages = [product?.image_url, ...(product?.gallery_urls || [])].filter(Boolean);
   const productSchema = product ? {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.name,
-    description: product.description,
-    image: product.image_url,
+    description: product.meta_description || product.description,
+    image: productImages.length > 0 ? productImages : undefined,
     url: `${SITE_URL}/product/${slug}`,
+    sku: product.id,
+    category: product.categories?.name || undefined,
     brand: {
       '@type': 'Brand',
       name: 'Petnic Studio',
@@ -65,16 +85,17 @@ export default async function ProductPage({ params }) {
       '@type': 'Offer',
       priceCurrency: 'USD',
       price: product.price,
-      availability: product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      availability: product.in_stock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      url: `${SITE_URL}/product/${slug}`,
       seller: {
         '@type': 'Organization',
         name: 'Petnic Studio',
       },
     },
-    aggregateRating: product.rating ? {
+    aggregateRating: product.rating && product.review_count > 0 ? {
       '@type': 'AggregateRating',
       ratingValue: product.rating,
-      reviewCount: product.review_count || 1,
+      reviewCount: product.review_count,
       bestRating: '5',
       worstRating: '1',
     } : undefined,

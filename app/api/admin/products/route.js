@@ -10,7 +10,10 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const collection = searchParams.get('collection');
 
-  let query = supabase.from('products').select('*, collections(name, slug), categories(name, slug)').order('created_at', { ascending: false });
+  let query = supabase
+    .from('products')
+    .select('*, collections(name, slug), categories(name, slug), product_variation_overrides(variation_group_id, included)')
+    .order('created_at', { ascending: false });
   if (collection) {
     const { data: col } = await supabase.from('collections').select('id').eq('slug', collection).single();
     if (col) query = query.eq('collection_id', col.id);
@@ -27,15 +30,27 @@ export async function POST(request) {
 
   const supabase = getSupabaseAdmin();
   const body = await request.json();
+  const { variation_overrides, ...productFields } = body;
 
-  const slug = body.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const slug = productFields.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
   const { data, error } = await supabase.from('products').insert({
-    ...body,
-    slug: body.slug || slug,
+    ...productFields,
+    slug: productFields.slug || slug,
   }).select('*, collections(name, slug), categories(name, slug)').single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  if (Array.isArray(variation_overrides) && variation_overrides.length > 0) {
+    const rows = variation_overrides
+      .filter((o) => o.variation_group_id && typeof o.included === 'boolean')
+      .map((o) => ({ product_id: data.id, variation_group_id: o.variation_group_id, included: o.included }));
+    if (rows.length > 0) {
+      const { error: ovError } = await supabase.from('product_variation_overrides').insert(rows);
+      if (ovError) return NextResponse.json({ error: ovError.message }, { status: 500 });
+    }
+  }
+
   return NextResponse.json({ product: data }, { status: 201 });
 }
 
@@ -45,7 +60,7 @@ export async function PUT(request) {
 
   const supabase = getSupabaseAdmin();
   const body = await request.json();
-  const { id, ...updates } = body;
+  const { id, variation_overrides, ...updates } = body;
 
   if (!id) return NextResponse.json({ error: 'Product ID required' }, { status: 400 });
 
@@ -55,6 +70,20 @@ export async function PUT(request) {
     .select('*, collections(name, slug), categories(name, slug)').single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  if (Array.isArray(variation_overrides)) {
+    const { error: delErr } = await supabase.from('product_variation_overrides').delete().eq('product_id', id);
+    if (delErr) return NextResponse.json({ error: delErr.message }, { status: 500 });
+
+    const rows = variation_overrides
+      .filter((o) => o.variation_group_id && typeof o.included === 'boolean')
+      .map((o) => ({ product_id: id, variation_group_id: o.variation_group_id, included: o.included }));
+    if (rows.length > 0) {
+      const { error: ovError } = await supabase.from('product_variation_overrides').insert(rows);
+      if (ovError) return NextResponse.json({ error: ovError.message }, { status: 500 });
+    }
+  }
+
   return NextResponse.json({ product: data });
 }
 
