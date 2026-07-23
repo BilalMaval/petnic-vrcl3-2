@@ -226,8 +226,8 @@ const ProductDetail = ({ product, related = [] }) => {
               )}
             </div>
 
-            {/* Gallery Thumbnails for Digital/Pet Care */}
-            {(isDigital || isPetCare) && galleryImages.length > 1 && (
+            {/* Gallery Thumbnails */}
+            {galleryImages.length > 1 && !uploadedImage && (
               <div className="flex gap-2 overflow-x-auto pb-2">
                 {galleryImages.map((img, idx) => (
                   <button
