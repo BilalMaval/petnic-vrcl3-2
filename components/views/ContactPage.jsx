@@ -48,9 +48,9 @@ const ContactPage = () => {
           <div className="space-y-6">
             {[
               { icon: Mail, label: 'Email', value: 'info@petnicstudio.com', href: 'mailto:info@petnicstudio.com' },
-              { icon: Phone, label: 'Phone', value: '+1 (581) 891-8811', href: 'tel:+15818918811' },
+              { icon: Phone, label: 'Phone', value: '+1 (406) 476-4899', href: 'tel:+14064764899' },
               { icon: Clock, label: 'Hours', value: 'Mon–Fri 9AM–6PM EST', href: null },
-              { icon: MapPin, label: 'Address', value: '1001 S Main St Ste 12362, Kalispell, MT 59901', href: null },
+              { icon: MapPin, label: 'Business Mailing Address', value: '1001 S Main St Ste 12362, Kalispell, MT 59901 — online business only, no walk-in retail location', href: null },
             ].map(({ icon: Icon, label, value, href }) => (
               <div key={label} className="bg-white rounded-xl p-5 border border-gray-100">
                 <div className="flex items-center gap-3">

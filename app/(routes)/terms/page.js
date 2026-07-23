@@ -14,7 +14,7 @@ const sections = [
     id: 'acceptance',
     heading: 'Acceptance of Terms',
     body: (
-      <p>By accessing or using petnicstudio.com (the “Site”) or placing an order, you agree to be bound by these Terms &amp; Conditions, our <a href="/privacy">Privacy Policy</a>, <a href="/refund">Refund &amp; Return Policy</a>, <a href="/shipping">Shipping &amp; Delivery Policy</a> and <a href="/cookies">Cookie Policy</a>. If you do not agree, please do not use the Site.</p>
+      <p>By accessing or using petnicstudio.com (the “Site”), operated by Petnic Studio LLC, or placing an order, you agree to be bound by these Terms &amp; Conditions, our <a href="/privacy">Privacy Policy</a>, <a href="/refund">Refund &amp; Return Policy</a>, <a href="/shipping">Shipping &amp; Delivery Policy</a> and <a href="/cookies">Cookie Policy</a>. If you do not agree, please do not use the Site.</p>
     ),
   },
   {
@@ -80,7 +80,7 @@ const sections = [
     id: 'intellectual-property',
     heading: 'Intellectual Property',
     body: (
-      <p>All Site content (logos, designs, AI-generated styles, copy, imagery) is owned by Petnic Studio or our licensors and is protected by copyright, trademark and other laws. You may not copy, modify, distribute or commercially exploit any content without our written permission.</p>
+      <p>All Site content (logos, designs, AI-generated styles, copy, imagery) is owned by Petnic Studio LLC or our licensors and is protected by copyright, trademark and other laws. You may not copy, modify, distribute or commercially exploit any content without our written permission.</p>
     ),
   },
   {
@@ -109,14 +109,14 @@ const sections = [
     id: 'liability',
     heading: 'Limitation of Liability',
     body: (
-      <p>To the fullest extent permitted by law, Petnic Studio shall not be liable for any indirect, incidental, special or consequential damages arising from your use of the Site or our products. Our total liability for any claim relating to a product is limited to the amount you paid for that product.</p>
+      <p>To the fullest extent permitted by law, Petnic Studio LLC shall not be liable for any indirect, incidental, special or consequential damages arising from your use of the Site or our products. Our total liability for any claim relating to a product is limited to the amount you paid for that product.</p>
     ),
   },
   {
     id: 'governing-law',
     heading: 'Governing Law & Disputes',
     body: (
-      <p>These Terms are governed by the laws of the United States and the State of Delaware, without regard to conflict-of-law principles. Any dispute will be resolved in the state or federal courts located in Delaware, unless otherwise required by your local consumer protection laws.</p>
+      <p>These Terms are governed by the laws of the United States and the State of Montana, without regard to conflict-of-law principles. Any dispute will be resolved in the state or federal courts located in Montana, unless otherwise required by your local consumer protection laws.</p>
     ),
   },
   {
@@ -140,7 +140,7 @@ export default function TermsPage() {
     <LegalPage
       title="Terms & Conditions"
       effective="May 31, 2026"
-      intro="Please read these Terms & Conditions carefully before using petnicstudio.com or purchasing any of our products. They form a legally binding agreement between you and Petnic Studio."
+      intro="Please read these Terms & Conditions carefully before using petnicstudio.com or purchasing any of our products. They form a legally binding agreement between you and Petnic Studio LLC."
       sections={sections}
     />
   );

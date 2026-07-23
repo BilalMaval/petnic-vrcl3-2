@@ -182,8 +182,8 @@ const ProductDetail = ({ product, related = [] }) => {
   return (
     <main className="min-h-screen bg-[#FAFAFA] py-8" data-testid="product-detail-page">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Link href={isPOD ? '/shop' : isDigital ? '/digital-downloads' : '/pet-care'} className="inline-flex items-center gap-2 text-[#4A4A68] hover:text-[#F97316] transition-colors mb-8" data-testid="back-link">
-          <ArrowLeft className="w-4 h-4" /><span>Back to {isPOD ? 'Shop' : isDigital ? 'Digital Downloads' : 'Pet Care'}</span>
+        <Link href={isDigital ? '/digital-downloads' : '/shop'} className="inline-flex items-center gap-2 text-[#4A4A68] hover:text-[#F97316] transition-colors mb-8" data-testid="back-link">
+          <ArrowLeft className="w-4 h-4" /><span>Back to {isDigital ? 'Digital Downloads' : 'Shop'}</span>
         </Link>
 
         <div className="grid lg:grid-cols-2 gap-12">

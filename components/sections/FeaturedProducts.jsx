@@ -50,8 +50,8 @@ const FeaturedProducts = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold text-[#1A1A2E] mb-3" style={{ fontFamily: 'Playfair Display, serif' }}>Bestselling Pet Products</h2>
-            <p className="text-[#4A4A68] text-lg">Our most loved custom pet portraits & care essentials</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-[#1A1A2E] mb-3" style={{ fontFamily: 'Playfair Display, serif' }}>Featured Pet Products</h2>
+            <p className="text-[#4A4A68] text-lg">Custom pet portraits & personalized products</p>
           </div>
           <Link href="/shop" className="mt-4 md:mt-0 text-[#F97316] font-semibold text-sm hover:underline flex items-center gap-1">View All Products <span className="ml-1">&rarr;</span></Link>
         </div>

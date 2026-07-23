@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, Star, Play } from 'lucide-react';
+import { ArrowRight, Star, Play, ShieldCheck, Package, Lock } from 'lucide-react';
 import { heroImages, stats } from '@/config/static-data';
 
 const HeroSection = () => {
@@ -14,7 +14,7 @@ const HeroSection = () => {
             {/* Badge */}
             <div className="inline-flex items-center gap-2 bg-orange-100 text-[#F97316] px-4 py-2 rounded-full text-sm font-semibold" style={{ fontFamily: 'Inter, sans-serif' }}>
               <Star className="w-4 h-4 fill-current" />
-              Rated #1 Custom Pet Portrait Studio — 48,000+ 5-Star Reviews
+              AI-Enhanced Custom Pet Portraits
             </div>
 
             {/* Heading - H1 with primary keyword */}
@@ -29,9 +29,9 @@ const HeroSection = () => {
 
             {/* Description */}
             <p className="text-[#4A4A68] text-lg leading-relaxed max-w-lg" style={{ fontFamily: 'Inter, sans-serif' }}>
-              Create personalized, museum-quality products featuring your furry friend.
-              From custom canvas prints to pet care essentials — celebrate your pet in style
-              with <strong>50+ artistic styles</strong> and <strong>200+ premium products</strong>.
+              Create personalized, high-quality products featuring your furry friend.
+              From custom canvas prints to apparel and home décor — celebrate your pet in style
+              with a range of <strong>artistic styles</strong> and <strong>personalized products</strong>.
             </p>
 
             {/* CTAs */}
@@ -53,24 +53,11 @@ const HeroSection = () => {
               </Link>
             </div>
 
-            {/* E-E-A-T Trust Signals */}
-            <div className="flex items-center gap-6 pt-2">
-              <div className="flex -space-x-3">
-                {[1,2,3,4,5].map((i) => (
-                  <div key={i} className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-200 to-orange-400 border-2 border-white flex items-center justify-center text-white text-xs font-bold">
-                    {['JW','MR','AK','DL','SM'][i-1]}
-                  </div>
-                ))}
-              </div>
-              <div>
-                <div className="flex items-center gap-1">
-                  {[1,2,3,4,5].map((i) => (
-                    <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
-                  ))}
-                  <span className="text-sm font-semibold text-[#1A1A2E] ml-1" style={{ fontFamily: 'Inter, sans-serif' }}>4.9/5</span>
-                </div>
-                <p className="text-xs text-[#4A4A68]" style={{ fontFamily: 'Inter, sans-serif' }}>From 48,000+ verified reviews</p>
-              </div>
+            {/* Trust Signals */}
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-2 text-sm text-[#4A4A68]" style={{ fontFamily: 'Inter, sans-serif' }}>
+              <span className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-[#F97316]" />30-Day Guarantee</span>
+              <span className="flex items-center gap-1.5"><Package className="w-4 h-4 text-[#F97316]" />Made to Order</span>
+              <span className="flex items-center gap-1.5"><Lock className="w-4 h-4 text-[#F97316]" />Secure Checkout</span>
             </div>
           </div>
 
@@ -101,8 +88,8 @@ const HeroSection = () => {
 
             {/* Floating Badge */}
             <div className="absolute -top-2 -right-2 bg-white rounded-2xl shadow-xl px-4 py-3">
-              <p className="text-2xl font-bold text-[#F97316]" style={{ fontFamily: 'Playfair Display, serif' }}>500K+</p>
-              <p className="text-xs text-gray-500" style={{ fontFamily: 'Inter, sans-serif' }}>Portraits Created</p>
+              <p className="text-2xl font-bold text-[#F97316]" style={{ fontFamily: 'Playfair Display, serif' }}>100%</p>
+              <p className="text-xs text-gray-500" style={{ fontFamily: 'Inter, sans-serif' }}>Custom Made</p>
             </div>
           </div>
         </div>

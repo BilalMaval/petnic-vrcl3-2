@@ -14,7 +14,7 @@ const sections = [
     id: 'overview',
     heading: 'Our 30-Day Satisfaction Guarantee',
     body: (
-      <p>We stand behind every order. If you’re not 100% happy with your purchase, we will reprint your custom item, replace your product, or issue a refund — your choice — within <strong>30 days</strong> of delivery, subject to the conditions below.</p>
+      <p>We stand behind every order. If an item arrives damaged, defective, or materially different from the design you approved, we will reprint, replace, or refund it — your choice — within <strong>30 days</strong> of delivery. Because personalized products are made specifically for each customer, correctly produced custom items are not eligible for a refund simply due to a change of mind. Full details and exceptions are below.</p>
     ),
   },
   {

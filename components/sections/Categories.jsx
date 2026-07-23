@@ -20,21 +20,18 @@ const Categories = () => {
           {categories.map((cat) => (
             <Link
               key={cat.id}
-              href={cat.slug === 'digital-downloads' ? '/digital-downloads' : cat.slug === 'pet-care' ? '/pet-care' : `/shop/${cat.slug}`}
+              href={cat.slug === 'digital-downloads' ? '/digital-downloads' : `/shop/${cat.slug}`}
               className="group relative rounded-2xl overflow-hidden h-72 block"
             >
               <Image
                 src={cat.image}
-                alt={`${cat.name} - Browse ${cat.productCount}+ custom pet products`}
+                alt={`${cat.name} - Browse custom pet products`}
                 fill
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 className="object-cover group-hover:scale-110 transition-transform duration-700"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-6">
-                <span className="text-orange-300 text-xs font-bold uppercase tracking-widest" style={{ fontFamily: 'Inter, sans-serif' }}>
-                  {cat.productCount} Products
-                </span>
                 <h3 className="text-xl font-bold text-white mt-1 mb-1" style={{ fontFamily: 'Playfair Display, serif' }}>
                   {cat.name}
                 </h3>

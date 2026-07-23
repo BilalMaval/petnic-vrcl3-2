@@ -23,7 +23,7 @@ const CTASection = () => {
           Ready to Create Something Special?
         </h2>
         <p className="text-white/80 text-lg mb-8 max-w-xl mx-auto" style={{ fontFamily: 'Inter, sans-serif' }}>
-          Join 150,000+ happy pet parents who've transformed their pet photos into beautiful, lasting keepsakes.
+          Join pet parents who've transformed their pet photos into beautiful, lasting keepsakes.
         </p>
         <div className="flex flex-wrap gap-4 justify-center">
           <Link

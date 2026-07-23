@@ -37,7 +37,7 @@ const Footer = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="text-center md:text-left">
-              <h3 className="text-2xl font-bold text-white mb-1" style={{ fontFamily: 'Playfair Display, serif' }}>Join 150,000+ Happy Pet Parents</h3>
+              <h3 className="text-2xl font-bold text-white mb-1" style={{ fontFamily: 'Playfair Display, serif' }}>Join Our Pet Loving Community</h3>
               <p className="text-white/90 text-sm" style={{ fontFamily: 'Inter, sans-serif' }}>Get exclusive deals, pet care tips & 15% off your first order</p>
             </div>
             <form onSubmit={handleSubscribe} className="flex w-full md:w-auto gap-2">
@@ -55,10 +55,10 @@ const Footer = () => {
             <Link href="/" className="flex items-center gap-2 mb-4">
               <Image src="/petnic-logo.png" alt="Petnic Studio - Custom Pet Portraits" width={48} height={48} className="h-12 w-auto" />
             </Link>
-            <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-sm">Personalize your pet's story with stunning, custom art & premium care products. Museum-grade quality with love in every detail.</p>
+            <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-sm">Personalize your pet's story with stunning, custom art and personalized products, made with care and attention to detail.</p>
             <div className="space-y-2.5 text-sm">
               <a href="mailto:info@petnicstudio.com" className="flex items-center gap-2.5 text-gray-400 hover:text-[#F97316] transition-colors"><Mail className="w-4 h-4" /><span>info@petnicstudio.com</span></a>
-              <a href="tel:+15818918811" className="flex items-center gap-2.5 text-gray-400 hover:text-[#F97316] transition-colors"><Phone className="w-4 h-4" /><span>+1 (581) 891-8811</span></a>
+              <a href="tel:+14064764899" className="flex items-center gap-2.5 text-gray-400 hover:text-[#F97316] transition-colors"><Phone className="w-4 h-4" /><span>+1 (406) 476-4899</span></a>
               <div className="flex items-start gap-2.5 text-gray-400"><MapPin className="w-4 h-4 mt-0.5 shrink-0" /><span>1001 S Main St Ste 12362<br />Kalispell, MT 59901</span></div>
             </div>
             <div className="flex gap-3 mt-6">
@@ -97,7 +97,7 @@ const Footer = () => {
             ))}
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-3 border-t border-white/5">
-            <p className="text-gray-500 text-xs">© 2025 Petnic Studio. All rights reserved. Made with <Heart className="w-3 h-3 inline text-[#F97316]" /> for pet lovers.</p>
+            <p className="text-gray-500 text-xs">© 2026 Petnic Studio LLC. All rights reserved. Made with <Heart className="w-3 h-3 inline text-[#F97316]" /> for pet lovers.</p>
             <p className="text-gray-500 text-xs flex items-center gap-2">
               <Link href="/contact" className="hover:text-gray-300 transition-colors">Contact Us</Link>
               <span aria-hidden="true">·</span>

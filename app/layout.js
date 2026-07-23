@@ -6,7 +6,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.petnicstudio.c
 
 export const metadata = {
   title: 'Custom Pet Portraits | Personalized Pet Art - Petnic Studio',
-  description: 'Create stunning custom pet portraits from your photos. Shop personalized canvas prints, framed art, mugs & more. 48,000+ 5-star reviews. Free shipping over $50.',
+  description: 'Create stunning custom pet portraits from your photos. Shop personalized canvas prints, framed art, mugs & more. Free shipping over $50.',
   metadataBase: new URL(SITE_URL),
   openGraph: {
     title: 'Custom Pet Portraits | Personalized Pet Art - Petnic Studio',

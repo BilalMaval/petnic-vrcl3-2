@@ -3,7 +3,6 @@ import TrustBadges from '@/components/sections/TrustBadges';
 import HowItWorks from '@/components/sections/HowItWorks';
 import Categories from '@/components/sections/Categories';
 import FeaturedProducts from '@/components/sections/FeaturedProducts';
-import Testimonials from '@/components/sections/Testimonials';
 import FAQSection from '@/components/sections/FAQSection';
 import CTASection from '@/components/sections/CTASection';
 import Script from 'next/script';
@@ -78,7 +77,7 @@ const faqSchema = {
       name: 'How long does it take to receive my custom pet portrait?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Digital proofs are typically ready within 2-3 business days. Once approved, physical prints ship within 5-7 business days. Rush options are available for urgent orders.',
+        text: 'Digital proofs are typically ready within 2-3 business days. Once approved, physical prints are produced and ship within 5-7 business days.',
       },
     },
     {
@@ -94,15 +93,15 @@ const faqSchema = {
       name: 'Can I customize the art style of my pet portrait?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Yes! We offer 50+ unique art styles including watercolor, oil painting, pop art, renaissance, and more. You can preview different styles before ordering.',
+        text: 'Yes! We offer a range of art styles including watercolor, oil painting, pop art, renaissance, and more. You can preview different styles before ordering.',
       },
     },
     {
       '@type': 'Question',
-      name: 'Do you offer refunds if I\'m not satisfied?',
+      name: 'Do you offer refunds if there\'s an issue with my order?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Absolutely! We offer a 100% satisfaction guarantee. If you\'re not happy with your portrait, we\'ll revise it for free or provide a full refund.',
+        text: 'Yes. If your order arrives damaged, defective, or different from the design you approved, we\'ll revise or refund it within 30 days. Since custom items are made specifically for you, correctly produced personalized products are not returnable for a change of mind — see our Refund Policy for details.',
       },
     },
     {
@@ -141,7 +140,6 @@ export default function HomePage() {
       <HowItWorks />
       <Categories />
       <FeaturedProducts />
-      <Testimonials />
       <FAQSection />
       <CTASection />
     </main>
