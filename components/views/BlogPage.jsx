@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Clock, User, Calendar, ArrowRight, Search, Tag, Loader2 } from 'lucide-react';
-import { blogPosts as fallbackPosts } from '@/config/static-data';
 
 const BlogPage = () => {
   const [posts, setPosts] = useState([]);
@@ -37,22 +36,10 @@ const BlogPage = () => {
         : `/api/blog?category=${activeCategory}`;
       const res = await fetch(url);
       const data = await res.json();
-      
-      if (data.posts?.length > 0) {
-        setPosts(data.posts);
-      } else {
-        // Use fallback static data if no posts in DB
-        setPosts(fallbackPosts.map(p => ({
-          ...p,
-          blog_categories: { name: p.category, slug: p.category.toLowerCase().replace(/\s+/g, '-') }
-        })));
-      }
+      setPosts(data.posts || []);
     } catch (error) {
       console.error('Failed to fetch posts:', error);
-      setPosts(fallbackPosts.map(p => ({
-        ...p,
-        blog_categories: { name: p.category, slug: p.category.toLowerCase().replace(/\s+/g, '-') }
-      })));
+      setPosts([]);
     } finally {
       setLoading(false);
     }
@@ -64,7 +51,8 @@ const BlogPage = () => {
   );
 
   const featuredPost = posts.find((p) => p.featured);
-  const regularPosts = filtered.filter((p) => p.id !== featuredPost?.id);
+  const showFeaturedHere = !!featuredPost && (activeCategory === 'all' || featuredPost.blog_categories?.slug === activeCategory);
+  const regularPosts = filtered.filter((p) => !(showFeaturedHere && p.id === featuredPost.id));
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
@@ -72,9 +60,9 @@ const BlogPage = () => {
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
-  const allCategories = categories.length > 0 
+  const allCategories = categories.length > 0
     ? [{ slug: 'all', name: 'All' }, ...categories]
-    : [{ slug: 'all', name: 'All' }, { slug: 'home-decor', name: 'Home Decor' }, { slug: 'pet-health', name: 'Pet Health' }, { slug: 'pet-care', name: 'Pet Care' }, { slug: 'photography', name: 'Photography' }];
+    : [{ slug: 'all', name: 'All' }];
 
   return (
     <main className="min-h-screen bg-[#FAFAFA]" data-testid="blog-page">
@@ -82,10 +70,10 @@ const BlogPage = () => {
         {/* Header */}
         <div className="mb-10">
           <h1 className="text-3xl md:text-4xl font-bold text-[#1A1A2E] mb-3" style={{ fontFamily: 'Playfair Display, serif' }}>
-            Pet Care Blog & Expert Tips
+            Pet Care Blog & Tips
           </h1>
           <p className="text-[#4A4A68] text-base" style={{ fontFamily: 'Inter, sans-serif' }}>
-            Expert advice from veterinarians, pet photographers & certified trainers
+            Tips, guides and inspiration for pet parents
           </p>
         </div>
 
@@ -129,7 +117,7 @@ const BlogPage = () => {
         ) : (
           <>
             {/* Featured Post */}
-            {featuredPost && activeCategory === 'all' && (
+            {showFeaturedHere && (
               <div className="mb-12 group">
                 <Link href={`/blog/${featuredPost.slug}`} className="block">
                   <div className="grid md:grid-cols-2 gap-6 bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-shadow">
