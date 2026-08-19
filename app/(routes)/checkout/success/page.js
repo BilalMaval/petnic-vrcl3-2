@@ -3,12 +3,15 @@ import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle, Package, ArrowRight, Loader2 } from 'lucide-react';
+import { useCart, PENDING_CART_CHECKOUT_KEY } from '@/lib/cart-context';
+import { trackPurchase } from '@/lib/analytics';
 
 function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
   const [status, setStatus] = useState('loading');
   const [orderData, setOrderData] = useState(null);
+  const { clearCart } = useCart();
 
   useEffect(() => {
     if (sessionId) {
@@ -34,6 +37,30 @@ function CheckoutSuccessContent() {
       if (data.payment_status === 'paid') {
         setStatus('success');
         setOrderData(data);
+        // Only clear the cart if THIS payment was initiated from the cart
+        // page (flag set right before the Stripe redirect). Buy Now never
+        // sets this flag, so a Buy Now purchase never touches the cart.
+        try {
+          if (window.localStorage.getItem(PENDING_CART_CHECKOUT_KEY) === '1') {
+            clearCart();
+            window.localStorage.removeItem(PENDING_CART_CHECKOUT_KEY);
+          }
+        } catch {}
+        // Uses the server-confirmed Stripe amount (not any client-side
+        // total) and the Stripe session ID as the transaction ID.
+        // trackPurchase dedupes internally, so this is safe to reach via
+        // repeated polls, re-renders, or a refresh of this same page.
+        trackPurchase({
+          transactionId: sessionId,
+          value: (data.amount_total || 0) / 100,
+          items: (data.items || []).map((it) => ({
+            item_id: it.product_id,
+            item_name: it.product_name,
+            price: it.unit_price,
+            quantity: it.quantity,
+            item_variant: [it.design_name, ...(it.variation_options || [])].filter(Boolean).join(', ') || undefined,
+          })),
+        });
         return;
       } else if (data.status === 'expired' || data.payment_status === 'failed') {
         setStatus('failed');

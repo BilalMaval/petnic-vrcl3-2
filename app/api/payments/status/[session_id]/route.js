@@ -95,6 +95,25 @@ export async function GET(_request, { params }) {
       console.error('payment status db update failed:', dbErr);
     }
 
+    // Analytics: once paid, surface the itemized breakdown that was already
+    // stored at checkout time so the success page can fire a properly
+    // itemized purchase event. Read-only lookup - does not affect order
+    // creation above, and product/pricing data is already validated
+    // server-side at the point it was originally stored.
+    let items = [];
+    if (paymentStatus === 'paid') {
+      try {
+        const { data: txRow } = await supabase
+          .from('payment_transactions')
+          .select('metadata')
+          .eq('session_id', session_id)
+          .maybeSingle();
+        items = txRow?.metadata?.items || [];
+      } catch (itemsErr) {
+        console.error('Failed to load items for analytics:', itemsErr);
+      }
+    }
+
     return NextResponse.json({
       session_id,
       status,
@@ -102,6 +121,7 @@ export async function GET(_request, { params }) {
       amount_total: session.amount_total,
       currency: session.currency,
       customer_email: session.customer_details?.email || session.customer_email,
+      items,
     });
   } catch (error) {
     console.error('Status check error:', error);

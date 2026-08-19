@@ -16,6 +16,7 @@ export async function POST(request) {
       user_email,
       shipping,
       selected_design,
+      attribution,
     } = body;
 
     if (!cart_items || !Array.isArray(cart_items) || cart_items.length === 0) {
@@ -32,10 +33,13 @@ export async function POST(request) {
     let total = 0;
 
     for (const item of cart_items) {
-      const qty = Math.max(1, parseInt(item.quantity || 1, 10));
+      // Clamp quantity to a sane range - min 1 so nothing is free, and a
+      // generous but bounded max so a spoofed value can't create an
+      // absurdly large Stripe line item.
+      const qty = Math.min(100, Math.max(1, parseInt(item.quantity || 1, 10)));
       const { data: product, error } = await supabase
         .from('products')
-        .select('id, name, price, slug, image_url')
+        .select('id, name, price, slug, image_url, in_stock')
         .eq('id', item.product_id)
         .single();
 
@@ -46,8 +50,31 @@ export async function POST(request) {
         );
       }
 
-      // Add per-item design surcharge if provided (POD products)
-      const designAddition = parseFloat(item.design_addition || 0) || 0;
+      if (product.in_stock === false) {
+        return NextResponse.json(
+          { error: `${product.name} is currently out of stock` },
+          { status: 400 }
+        );
+      }
+
+      // Design surcharge: re-fetch the selected reference design's price from
+      // the DB so the client can never spoof this amount (mirrors the
+      // variation-option validation below). item.design_addition and
+      // item.design_name, if sent, are display-only leftovers and are
+      // ignored for pricing purposes.
+      let designAddition = 0;
+      let designName = null;
+      if (item.design_id) {
+        const { data: design } = await supabase
+          .from('reference_designs')
+          .select('id, name, price_addition')
+          .eq('id', item.design_id)
+          .single();
+        if (design) {
+          designAddition = parseFloat(design.price_addition) || 0;
+          designName = design.name;
+        }
+      }
 
       // Variations: re-fetch the selected options' price from the DB so the
       // client can never spoof the surcharge amount.
@@ -70,7 +97,7 @@ export async function POST(request) {
       total += itemTotal;
 
       const nameSuffixParts = [];
-      if (designAddition > 0 && item.design_name) nameSuffixParts.push(item.design_name);
+      if (designName) nameSuffixParts.push(designName);
       if (variationLabels.length > 0) nameSuffixParts.push(variationLabels.join(', '));
       const itemName = nameSuffixParts.length > 0 ? `${product.name} — ${nameSuffixParts.join(', ')}` : product.name;
 
@@ -93,7 +120,7 @@ export async function POST(request) {
         quantity: qty,
         unit_price: unitPrice,
         total: itemTotal,
-        design_name: item.design_name || null,
+        design_name: designName,
         design_addition: designAddition,
         variation_options: variationLabels,
         variation_addition: variationAddition,
@@ -129,6 +156,24 @@ export async function POST(request) {
 
     const session = await stripe.checkout.sessions.create(sessionParams);
 
+    // First-touch marketing attribution (utm_*/fbclid), captured client-side
+    // before checkout started. Stored alongside items/shipping in the same
+    // JSONB metadata column - a sibling key, not merged into `items`, so it
+    // can't corrupt the item schema. Allow-listed so only the known
+    // attribution fields can ever land here, regardless of what the client
+    // sends.
+    const ATTRIBUTION_FIELDS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'fbclid', 'captured_at'];
+    let cleanAttribution = null;
+    if (attribution && typeof attribution === 'object' && !Array.isArray(attribution)) {
+      cleanAttribution = {};
+      for (const key of ATTRIBUTION_FIELDS) {
+        if (typeof attribution[key] === 'string' && attribution[key]) {
+          cleanAttribution[key] = attribution[key].slice(0, 255);
+        }
+      }
+      if (Object.keys(cleanAttribution).length === 0) cleanAttribution = null;
+    }
+
     // Record pending payment transaction. Non-fatal if the table is missing.
     try {
       await supabase.from('payment_transactions').insert({
@@ -143,6 +188,7 @@ export async function POST(request) {
           items: validatedItems,
           shipping: shipping || null,
           selected_design: selected_design || null,
+          attribution: cleanAttribution,
         },
         created_at: new Date().toISOString(),
       });

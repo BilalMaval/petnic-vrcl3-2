@@ -3,6 +3,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Star, ShoppingCart, Heart, Upload, Check, CreditCard, Truck, Shield, ArrowLeft, Minus, Plus, X, ChevronLeft, ChevronRight, Download, ExternalLink, DollarSign, Sparkles } from 'lucide-react';
+import { useCart, buildCartItemId } from '@/lib/cart-context';
+import { trackViewItem, trackAddToCart, trackBeginCheckout, getStoredAttribution } from '@/lib/analytics';
 
 // Default reference designs for POD products
 const defaultReferenceDesigns = [
@@ -30,7 +32,28 @@ const ProductDetail = ({ product, related = [] }) => {
   const [variationGroups, setVariationGroups] = useState([]);
   const [selectedVariations, setSelectedVariations] = useState({}); // { [groupId]: optionId }
   const [variationError, setVariationError] = useState('');
+  const [addedToCart, setAddedToCart] = useState(false);
   const fileInputRef = useRef(null);
+  const { addItem } = useCart();
+  const viewedProductIdRef = useRef(null);
+
+  // Fire view_item exactly once per distinct product id - guards against
+  // React re-renders and Strict Mode's dev-only double-invoke firing it
+  // twice for the same page visit.
+  useEffect(() => {
+    if (!product?.id || viewedProductIdRef.current === product.id) return;
+    viewedProductIdRef.current = product.id;
+    trackViewItem({
+      items: [{
+        item_id: product.id,
+        item_name: product.name,
+        price: parseFloat(product.price) || 0,
+        quantity: 1,
+        item_category: product.categories?.name || product.collections?.name,
+      }],
+      value: parseFloat(product.price) || 0,
+    });
+  }, [product?.id]);
 
   // Fetch reference designs from API
   useEffect(() => {
@@ -88,6 +111,14 @@ const ProductDetail = ({ product, related = [] }) => {
   const variationAddition = selectedOptionsList.reduce((sum, o) => sum + (parseFloat(o.price_addition) || 0), 0);
   const baseTotal = (product.price * quantity);
   const total = (baseTotal + (isPOD ? designAddition : 0) + (variationAddition * quantity)).toFixed(2);
+  // Per-unit price including design/variation surcharges - used for
+  // analytics item price fields (GA4/Meta expect a per-unit price, not the
+  // multiplied line total).
+  const unitPrice = parseFloat(product.price) + (isPOD ? designAddition : 0) + variationAddition;
+  const analyticsVariant = [
+    isPOD && selectedDesign?.name,
+    ...selectedOptionsList.map(o => o.label),
+  ].filter(Boolean).join(', ') || undefined;
 
   const handleSelectVariation = (groupId, optionId, isRequired) => {
     setVariationError('');
@@ -128,6 +159,18 @@ const ProductDetail = ({ product, related = [] }) => {
     e.preventDefault();
     setPaymentError('');
     setProcessing(true);
+    // Buy Now checkout is starting - one item, no add_to_cart involved.
+    trackBeginCheckout({
+      items: [{
+        item_id: product.id,
+        item_name: product.name,
+        price: unitPrice,
+        quantity,
+        item_category: product.categories?.name || product.collections?.name,
+        item_variant: analyticsVariant,
+      }],
+      value: parseFloat(total),
+    });
     try {
       const res = await fetch('/api/payments/checkout', {
         method: 'POST',
@@ -139,13 +182,13 @@ const ProductDetail = ({ product, related = [] }) => {
             {
               product_id: product.id,
               quantity,
-              design_addition: isPOD ? designAddition : 0,
-              design_name: isPOD ? selectedDesign?.name || null : null,
+              design_id: isPOD ? selectedDesign?.id || null : null,
               variation_option_ids: selectedOptionsList.map(o => o.id),
             },
           ],
           shipping: { required: !isDigital, name: paymentForm.name },
           selected_design: isPOD ? selectedDesign?.name || null : null,
+          attribution: getStoredAttribution(),
         }),
       });
       const data = await res.json();
@@ -157,6 +200,43 @@ const ProductDetail = ({ product, related = [] }) => {
       setPaymentError(err.message || 'Something went wrong. Please try again.');
       setProcessing(false);
     }
+  };
+
+  const handleAddToCart = () => {
+    if (missingRequiredGroup) {
+      setVariationError(`Please choose a ${missingRequiredGroup.name.toLowerCase()}.`);
+      return;
+    }
+    const variationOptionIds = selectedOptionsList.map(o => o.id);
+    const designId = isPOD ? (selectedDesign?.id || null) : null;
+    addItem({
+      id: buildCartItemId(product.id, designId, variationOptionIds),
+      product_id: product.id,
+      slug: product.slug,
+      name: product.name,
+      image_url: product.image_url,
+      price: product.price,
+      collection_slug: product.collections?.slug || null,
+      quantity,
+      design: isPOD && selectedDesign ? { id: selectedDesign.id, name: selectedDesign.name, price_addition: selectedDesign.price_addition } : null,
+      variations: selectedOptionsList.map(o => ({ id: o.id, label: o.label, price_addition: o.price_addition })),
+    });
+    // Fire only after the item has actually been added above - represents
+    // the quantity/config just added in this action, not the cart's new
+    // cumulative total for that line.
+    trackAddToCart({
+      items: [{
+        item_id: product.id,
+        item_name: product.name,
+        price: unitPrice,
+        quantity,
+        item_category: product.categories?.name || product.collections?.name,
+        item_variant: analyticsVariant,
+      }],
+      value: unitPrice * quantity,
+    });
+    setAddedToCart(true);
+    setTimeout(() => setAddedToCart(false), 2000);
   };
 
   const handleDownload = () => {
@@ -470,10 +550,22 @@ const ProductDetail = ({ product, related = [] }) => {
                     <ShoppingCart className="w-5 h-5" />Buy Now — ${total}
                   </button>
                 )}
+                {!(isDigital && product.is_free) && (
+                  <button
+                    type="button"
+                    data-testid="add-to-cart-button"
+                    onClick={handleAddToCart}
+                    className={`w-14 h-14 border-2 rounded-xl flex items-center justify-center transition-colors ${addedToCart ? 'border-green-500 text-green-600 bg-green-50' : 'border-gray-200 text-gray-500 hover:border-[#F97316] hover:text-[#F97316]'}`}
+                    title="Add to Cart"
+                  >
+                    {addedToCart ? <Check className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                  </button>
+                )}
                 <button data-testid="wishlist-button" className="w-14 h-14 border-2 border-gray-200 rounded-xl flex items-center justify-center text-gray-400 hover:border-[#F97316] hover:text-[#F97316] transition-colors">
                   <Heart className="w-5 h-5" />
                 </button>
               </div>
+              {addedToCart && <p className="text-sm text-green-600 font-semibold" data-testid="add-to-cart-confirmation">✓ Added to cart</p>}
               {variationError && <p className="text-sm text-red-600" data-testid="variation-error">{variationError}</p>}
             </div>
 

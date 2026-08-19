@@ -5,12 +5,13 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Search, User, ShoppingCart, Menu, X, ChevronDown, LogOut } from 'lucide-react';
 import { navItems } from '@/config/static-data';
+import { useCart } from '@/lib/cart-context';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
-  const [cartCount] = useState(0);
+  const { itemCount: cartCount } = useCart();
   const [searchOpen, setSearchOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -183,12 +184,12 @@ const Navbar = () => {
                 )}
               </div>
 
-              <button className="relative p-2.5 rounded-full hover:bg-gray-100 transition-colors text-[#4A4A68] hover:text-[#F97316]" aria-label="Cart" data-testid="cart-btn">
+              <Link href="/cart" className="relative p-2.5 rounded-full hover:bg-gray-100 transition-colors text-[#4A4A68] hover:text-[#F97316]" aria-label="Cart" data-testid="cart-btn">
                 <ShoppingCart className="w-5 h-5" />
                 {cartCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-[#F97316] text-white text-[10px] font-bold rounded-full flex items-center justify-center">{cartCount}</span>
                 )}
-              </button>
+              </Link>
               <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden p-2.5 rounded-full hover:bg-gray-100 transition-colors text-[#4A4A68]" aria-label="Menu" data-testid="mobile-menu-btn">
                 {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
