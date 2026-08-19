@@ -20,8 +20,11 @@ export async function GET(request) {
     const orders = ordersRes.data || [];
     const users = usersRes.data || [];
 
+    // Only orders confirmed as paid by Stripe (via the webhook/status-poll
+    // flow) count as revenue - 'confirmed' can be set by the unauthenticated
+    // /api/orders endpoint without any payment ever being taken.
     const totalRevenue = orders
-      .filter(o => o.status === 'confirmed')
+      .filter(o => o.status === 'paid')
       .reduce((sum, o) => sum + parseFloat(o.total || 0), 0);
 
     const recentOrders = orders.slice(0, 10);
@@ -33,7 +36,7 @@ export async function GET(request) {
         totalRevenue,
         totalUsers: users.length,
         pendingOrders: orders.filter(o => o.status === 'pending').length,
-        confirmedOrders: orders.filter(o => o.status === 'confirmed').length,
+        confirmedOrders: orders.filter(o => o.status === 'paid').length,
       },
       recentOrders,
     });

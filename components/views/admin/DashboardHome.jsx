@@ -100,7 +100,7 @@ export default function DashboardHome({ token }) {
                     <td className="py-3 px-2 font-mono text-xs">{o.order_id}</td>
                     <td className="py-3 px-2">{o.product_name}</td>
                     <td className="py-3 px-2 font-semibold">${parseFloat(o.total || 0).toFixed(2)}</td>
-                    <td className="py-3 px-2"><span className={`px-2 py-1 rounded-full text-xs font-medium ${o.status === 'confirmed' ? 'bg-green-100 text-green-700' : o.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'}`}>{o.status}</span></td>
+                    <td className="py-3 px-2"><span className={`px-2 py-1 rounded-full text-xs font-medium ${(o.status === 'confirmed' || o.status === 'paid') ? 'bg-green-100 text-green-700' : o.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'}`}>{o.status}</span></td>
                   </tr>
                 ))}
               </tbody>
