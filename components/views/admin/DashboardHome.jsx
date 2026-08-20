@@ -102,9 +102,22 @@ export default function DashboardHome({ token }) {
 
   useEffect(() => { fetchStats(); }, [fetchStats]);
 
-  const rangeLabel = preset === 'custom'
-    ? (appliedCustom.start && appliedCustom.end ? `${appliedCustom.start} to ${appliedCustom.end}` : 'Pick a range')
-    : PRESETS.find(p => p.key === preset)?.label || 'All Time';
+  const formatDisplayDate = (iso) => {
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  // Always show the actual resolved date(s), not just the preset name, so
+  // "This Month" etc. reads as e.g. "This Month (Aug 1 - Aug 20, 2026)".
+  const rangeLabel = (() => {
+    if (preset === 'all') return 'All Time';
+    const { start, end } = activeRange;
+    if (!start || !end) return preset === 'custom' ? 'Pick a range' : '...';
+    const dateStr = start === end ? formatDisplayDate(start) : `${formatDisplayDate(start)} - ${formatDisplayDate(end)}`;
+    if (preset === 'custom') return dateStr;
+    const presetName = PRESETS.find(p => p.key === preset)?.label;
+    return `${presetName} (${dateStr})`;
+  })();
 
   const cards = [
     { label: 'Total Products', value: stats?.totalProducts || 0, icon: Package, color: 'bg-blue-500', scoped: false },
