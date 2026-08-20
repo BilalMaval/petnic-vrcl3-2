@@ -120,10 +120,10 @@ export default function DashboardHome({ token }) {
   })();
 
   const cards = [
-    { label: 'Total Products', value: stats?.totalProducts || 0, icon: Package, color: 'bg-blue-500', scoped: false },
-    { label: 'Orders', value: stats?.totalOrders || 0, icon: ShoppingBag, color: 'bg-green-500', scoped: true },
-    { label: 'Revenue', value: `$${(stats?.totalRevenue || 0).toFixed(2)}`, icon: DollarSign, color: 'bg-[#F97316]', scoped: true },
-    { label: 'Total Users', value: stats?.totalUsers || 0, icon: Users, color: 'bg-purple-500', scoped: false },
+    { label: 'Total Products', value: stats?.totalProducts || 0, icon: Package, color: 'bg-blue-500' },
+    { label: 'Orders', value: stats?.totalOrders || 0, icon: ShoppingBag, color: 'bg-green-500' },
+    { label: 'Revenue', value: `$${(stats?.totalRevenue || 0).toFixed(2)}`, icon: DollarSign, color: 'bg-[#F97316]' },
+    { label: 'Total Users', value: stats?.totalUsers || 0, icon: Users, color: 'bg-purple-500' },
   ];
 
   if (loading && !stats) {
@@ -149,7 +149,8 @@ export default function DashboardHome({ token }) {
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <h2 className="text-2xl font-bold text-[#1A1A2E]" style={{ fontFamily: 'Playfair Display, serif' }}>Dashboard Overview</h2>
 
-        <div className="flex flex-wrap items-center gap-2" data-testid="date-range-filter">
+        <div className="flex flex-col items-end gap-1" data-testid="date-range-filter">
+        <div className="flex flex-wrap items-center gap-2">
           <Calendar className="w-4 h-4 text-gray-400" />
           <select
             value={preset}
@@ -188,6 +189,8 @@ export default function DashboardHome({ token }) {
             </>
           )}
         </div>
+        <span className="text-xs text-gray-400" data-testid="date-range-resolved">{rangeLabel}</span>
+        </div>
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -199,7 +202,6 @@ export default function DashboardHome({ token }) {
             </div>
             <p className="text-2xl font-bold text-[#1A1A2E]">{c.value}</p>
             <p className="text-sm text-gray-500 mt-1">{c.label}</p>
-            <p className="text-xs text-gray-400 mt-1">{c.scoped ? rangeLabel : 'All Time'}</p>
           </div>
         ))}
       </div>
@@ -207,7 +209,6 @@ export default function DashboardHome({ token }) {
       <div className="bg-white rounded-xl border border-gray-100 p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-[#1A1A2E]">Recent Orders</h3>
-          <span className="text-xs text-gray-400">{rangeLabel}</span>
         </div>
         {recentOrders.length === 0 ? (
           <p className="text-gray-500 text-center py-8">No orders in this range</p>
