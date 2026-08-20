@@ -8,6 +8,15 @@ export async function GET(request) {
 
   const supabase = getSupabaseAdmin();
 
+  // Optional date range (YYYY-MM-DD, inclusive) scoping orders/revenue -
+  // mirrors WooCommerce's Analytics date-range picker. Product/user totals
+  // stay all-time since they're catalog/account counts, not sales metrics.
+  const { searchParams } = new URL(request.url);
+  const startParam = searchParams.get('start');
+  const endParam = searchParams.get('end');
+  const rangeStart = startParam ? new Date(`${startParam}T00:00:00.000Z`) : null;
+  const rangeEnd = endParam ? new Date(`${endParam}T23:59:59.999Z`) : null;
+
   try {
     // Fetch all data and count manually for reliability
     const [productsRes, ordersRes, usersRes] = await Promise.all([
@@ -17,8 +26,17 @@ export async function GET(request) {
     ]);
 
     const products = productsRes.data || [];
-    const orders = ordersRes.data || [];
+    const allOrders = ordersRes.data || [];
     const users = usersRes.data || [];
+
+    const orders = (rangeStart || rangeEnd)
+      ? allOrders.filter(o => {
+          const created = new Date(o.created_at);
+          if (rangeStart && created < rangeStart) return false;
+          if (rangeEnd && created > rangeEnd) return false;
+          return true;
+        })
+      : allOrders;
 
     // Only orders confirmed as paid by Stripe (via the webhook/status-poll
     // flow) count as revenue - 'confirmed' can be set by the unauthenticated
@@ -39,6 +57,7 @@ export async function GET(request) {
         confirmedOrders: orders.filter(o => o.status === 'paid').length,
       },
       recentOrders,
+      range: { start: startParam || null, end: endParam || null },
     });
   } catch (error) {
     console.error('Stats API error:', error);

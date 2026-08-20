@@ -1,6 +1,54 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import { Package, ShoppingBag, DollarSign, Users, TrendingUp, ArrowUpRight, AlertCircle, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Package, ShoppingBag, DollarSign, Users, ArrowUpRight, AlertCircle, Loader2, Calendar } from 'lucide-react';
+
+const fmt = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const daysAgo = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return d; };
+
+const PRESETS = [
+  { key: 'today', label: 'Today' },
+  { key: 'yesterday', label: 'Yesterday' },
+  { key: 'last7', label: 'Last 7 Days' },
+  { key: 'last30', label: 'Last 30 Days' },
+  { key: 'this_month', label: 'This Month' },
+  { key: 'last_month', label: 'Last Month' },
+  { key: 'this_year', label: 'This Year' },
+  { key: 'all', label: 'All Time' },
+  { key: 'custom', label: 'Custom Range' },
+];
+
+// Mirrors WooCommerce Analytics' date-range picker: a preset dropdown plus a
+// custom start/end fallback. Returns { start, end } as 'YYYY-MM-DD' strings,
+// or { start: null, end: null } for 'all' (no filter).
+function presetToRange(preset, customStart, customEnd) {
+  const now = new Date();
+  switch (preset) {
+    case 'today':
+      return { start: fmt(now), end: fmt(now) };
+    case 'yesterday': {
+      const y = daysAgo(1);
+      return { start: fmt(y), end: fmt(y) };
+    }
+    case 'last7':
+      return { start: fmt(daysAgo(6)), end: fmt(now) };
+    case 'last30':
+      return { start: fmt(daysAgo(29)), end: fmt(now) };
+    case 'this_month':
+      return { start: fmt(new Date(now.getFullYear(), now.getMonth(), 1)), end: fmt(now) };
+    case 'last_month': {
+      const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+      const lastMonthStart = new Date(lastMonthEnd.getFullYear(), lastMonthEnd.getMonth(), 1);
+      return { start: fmt(lastMonthStart), end: fmt(lastMonthEnd) };
+    }
+    case 'this_year':
+      return { start: fmt(new Date(now.getFullYear(), 0, 1)), end: fmt(now) };
+    case 'custom':
+      return { start: customStart || null, end: customEnd || null };
+    case 'all':
+    default:
+      return { start: null, end: null };
+  }
+}
 
 export default function DashboardHome({ token }) {
   const [stats, setStats] = useState(null);
@@ -8,28 +56,40 @@ export default function DashboardHome({ token }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-    
+  const [preset, setPreset] = useState('all');
+  const [customStart, setCustomStart] = useState('');
+  const [customEnd, setCustomEnd] = useState('');
+  // Only re-fetch on custom range once the user hits Apply, not per keystroke.
+  const [appliedCustom, setAppliedCustom] = useState({ start: null, end: null });
+
+  const activeRange = preset === 'custom'
+    ? { start: appliedCustom.start, end: appliedCustom.end }
+    : presetToRange(preset);
+
+  const fetchStats = useCallback(() => {
+    if (!token) { setLoading(false); return; }
+    if (preset === 'custom' && (!activeRange.start || !activeRange.end)) return;
+
     setLoading(true);
     setError(null);
-    
-    fetch('/api/admin/stats', { 
-      headers: { 
+
+    const params = new URLSearchParams();
+    if (activeRange.start) params.set('start', activeRange.start);
+    if (activeRange.end) params.set('end', activeRange.end);
+
+    fetch(`/api/admin/stats?${params.toString()}`, {
+      headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
-      } 
+      }
     })
       .then(r => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
-      .then(d => { 
-        setStats(d.stats || {}); 
-        setRecentOrders(d.recentOrders || []); 
+      .then(d => {
+        setStats(d.stats || {});
+        setRecentOrders(d.recentOrders || []);
         setLoading(false);
       })
       .catch(e => {
@@ -37,16 +97,23 @@ export default function DashboardHome({ token }) {
         setError(e.message);
         setLoading(false);
       });
-  }, [token]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, preset, appliedCustom.start, appliedCustom.end]);
+
+  useEffect(() => { fetchStats(); }, [fetchStats]);
+
+  const rangeLabel = preset === 'custom'
+    ? (appliedCustom.start && appliedCustom.end ? `${appliedCustom.start} to ${appliedCustom.end}` : 'Pick a range')
+    : PRESETS.find(p => p.key === preset)?.label || 'All Time';
 
   const cards = [
-    { label: 'Total Products', value: stats?.totalProducts || 0, icon: Package, color: 'bg-blue-500' },
-    { label: 'Total Orders', value: stats?.totalOrders || 0, icon: ShoppingBag, color: 'bg-green-500' },
-    { label: 'Revenue', value: `$${(stats?.totalRevenue || 0).toFixed(2)}`, icon: DollarSign, color: 'bg-[#F97316]' },
-    { label: 'Users', value: stats?.totalUsers || 0, icon: Users, color: 'bg-purple-500' },
+    { label: 'Total Products', value: stats?.totalProducts || 0, icon: Package, color: 'bg-blue-500', scoped: false },
+    { label: 'Orders', value: stats?.totalOrders || 0, icon: ShoppingBag, color: 'bg-green-500', scoped: true },
+    { label: 'Revenue', value: `$${(stats?.totalRevenue || 0).toFixed(2)}`, icon: DollarSign, color: 'bg-[#F97316]', scoped: true },
+    { label: 'Total Users', value: stats?.totalUsers || 0, icon: Users, color: 'bg-purple-500', scoped: false },
   ];
 
-  if (loading) {
+  if (loading && !stats) {
     return (
       <div className="flex items-center justify-center py-20" data-testid="admin-dashboard-loading">
         <Loader2 className="w-8 h-8 text-[#F97316] animate-spin" />
@@ -66,7 +133,49 @@ export default function DashboardHome({ token }) {
 
   return (
     <div data-testid="admin-dashboard-home">
-      <h2 className="text-2xl font-bold text-[#1A1A2E] mb-6" style={{ fontFamily: 'Playfair Display, serif' }}>Dashboard Overview</h2>
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <h2 className="text-2xl font-bold text-[#1A1A2E]" style={{ fontFamily: 'Playfair Display, serif' }}>Dashboard Overview</h2>
+
+        <div className="flex flex-wrap items-center gap-2" data-testid="date-range-filter">
+          <Calendar className="w-4 h-4 text-gray-400" />
+          <select
+            value={preset}
+            onChange={(e) => setPreset(e.target.value)}
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-[#1A1A2E] bg-white focus:outline-none focus:ring-2 focus:ring-[#F97316]/30"
+            data-testid="date-range-preset"
+          >
+            {PRESETS.map(p => <option key={p.key} value={p.key}>{p.label}</option>)}
+          </select>
+
+          {preset === 'custom' && (
+            <>
+              <input
+                type="date"
+                value={customStart}
+                onChange={(e) => setCustomStart(e.target.value)}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#F97316]/30"
+                data-testid="date-range-start"
+              />
+              <span className="text-gray-400 text-sm">to</span>
+              <input
+                type="date"
+                value={customEnd}
+                onChange={(e) => setCustomEnd(e.target.value)}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#F97316]/30"
+                data-testid="date-range-end"
+              />
+              <button
+                onClick={() => setAppliedCustom({ start: customStart, end: customEnd })}
+                disabled={!customStart || !customEnd}
+                className="bg-[#F97316] text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#EA6C10] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                data-testid="date-range-apply"
+              >
+                Apply
+              </button>
+            </>
+          )}
+        </div>
+      </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {cards.map((c, i) => (
@@ -77,14 +186,18 @@ export default function DashboardHome({ token }) {
             </div>
             <p className="text-2xl font-bold text-[#1A1A2E]">{c.value}</p>
             <p className="text-sm text-gray-500 mt-1">{c.label}</p>
+            <p className="text-xs text-gray-400 mt-1">{c.scoped ? rangeLabel : 'All Time'}</p>
           </div>
         ))}
       </div>
 
       <div className="bg-white rounded-xl border border-gray-100 p-6">
-        <h3 className="text-lg font-semibold text-[#1A1A2E] mb-4">Recent Orders</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-[#1A1A2E]">Recent Orders</h3>
+          <span className="text-xs text-gray-400">{rangeLabel}</span>
+        </div>
         {recentOrders.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">No orders yet</p>
+          <p className="text-gray-500 text-center py-8">No orders in this range</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
