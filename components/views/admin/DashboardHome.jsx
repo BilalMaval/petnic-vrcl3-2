@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback } from 'react';
 import { Package, ShoppingBag, DollarSign, Users, ArrowUpRight, AlertCircle, Loader2, Calendar } from 'lucide-react';
+import { ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 
 const fmt = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const daysAgo = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return d; };
@@ -53,6 +54,7 @@ function presetToRange(preset, customStart, customEnd) {
 export default function DashboardHome({ token }) {
   const [stats, setStats] = useState(null);
   const [recentOrders, setRecentOrders] = useState([]);
+  const [timeSeries, setTimeSeries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -90,6 +92,7 @@ export default function DashboardHome({ token }) {
       .then(d => {
         setStats(d.stats || {});
         setRecentOrders(d.recentOrders || []);
+        setTimeSeries(d.timeSeries || []);
         setLoading(false);
       })
       .catch(e => {
@@ -204,6 +207,42 @@ export default function DashboardHome({ token }) {
             <p className="text-sm text-gray-500 mt-1">{c.label}</p>
           </div>
         ))}
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-6 mb-8">
+        <div className="bg-white rounded-xl border border-gray-100 p-6" data-testid="sales-chart">
+          <h3 className="text-lg font-semibold text-[#1A1A2E] mb-4">Sales</h3>
+          {timeSeries.length === 0 ? (
+            <p className="text-gray-500 text-center py-16">No sales data in this range</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={260}>
+              <LineChart data={timeSeries} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#4A4A68' }} />
+                <YAxis tick={{ fontSize: 12, fill: '#4A4A68' }} tickFormatter={(v) => `$${v}`} />
+                <Tooltip formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Revenue']} />
+                <Line type="monotone" dataKey="revenue" stroke="#F97316" strokeWidth={2} dot={{ r: 3, fill: '#F97316' }} />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-100 p-6" data-testid="orders-chart">
+          <h3 className="text-lg font-semibold text-[#1A1A2E] mb-4">Orders</h3>
+          {timeSeries.length === 0 ? (
+            <p className="text-gray-500 text-center py-16">No orders data in this range</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={timeSeries} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#4A4A68' }} />
+                <YAxis tick={{ fontSize: 12, fill: '#4A4A68' }} allowDecimals={false} />
+                <Tooltip formatter={(value) => [value, 'Orders']} />
+                <Bar dataKey="orders" fill="#22c55e" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-100 p-6">
