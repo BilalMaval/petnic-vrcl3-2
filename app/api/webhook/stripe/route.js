@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { stripeClient } from '@/lib/stripe';
+import { buildOrderFromTransaction } from '@/lib/orders';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -66,15 +67,7 @@ export async function POST(request) {
               .maybeSingle();
 
             if (!existingOrder) {
-              await supabase.from('orders').insert({
-                user_id: tx.user_id,
-                email: tx.user_email,
-                total: tx.amount,
-                status: 'paid',
-                payment_session_id: tx.session_id,
-                items: tx.metadata?.items || [],
-                created_at: new Date().toISOString(),
-              });
+              await supabase.from('orders').insert(buildOrderFromTransaction(tx));
             }
           }
         }
