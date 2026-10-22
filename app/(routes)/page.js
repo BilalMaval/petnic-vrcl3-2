@@ -31,7 +31,7 @@ const organizationSchema = {
   url: SITE_URL,
   logo: `${SITE_URL}/petnic-logo.png`,
   description: 'Create stunning custom pet portraits from your photos. Personalized canvas prints, framed art, and more.',
-  telephone: '+1-581-891-8811',
+  telephone: '+1-406-476-4899',
   address: {
     '@type': 'PostalAddress',
     streetAddress: '1001 S Main St Ste 12362',
@@ -42,7 +42,7 @@ const organizationSchema = {
   },
   contactPoint: {
     '@type': 'ContactPoint',
-    telephone: '+1-581-891-8811',
+    telephone: '+1-406-476-4899',
     email: 'info@petnicstudio.com',
     contactType: 'customer service',
   },
