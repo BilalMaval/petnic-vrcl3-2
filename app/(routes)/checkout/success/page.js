@@ -2,9 +2,10 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { CheckCircle, Package, ArrowRight, Loader2 } from 'lucide-react';
+import { CheckCircle, Package, ArrowRight, Loader2, Download } from 'lucide-react';
 import { useCart, PENDING_CART_CHECKOUT_KEY } from '@/lib/cart-context';
 import { trackPurchase } from '@/lib/analytics';
+import { clearStoredCoupon } from '@/components/CouponBox';
 
 function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
@@ -37,6 +38,7 @@ function CheckoutSuccessContent() {
       if (data.payment_status === 'paid') {
         setStatus('success');
         setOrderData(data);
+        clearStoredCoupon();
         // Only clear the cart if THIS payment was initiated from the cart
         // page (flag set right before the Stripe redirect). Buy Now never
         // sets this flag, so a Buy Now purchase never touches the cart.
@@ -113,10 +115,36 @@ function CheckoutSuccessContent() {
                 <span className="text-gray-500">Order Total:</span>
                 <span className="font-semibold">${(orderData.amount_total / 100).toFixed(2)}</span>
               </div>
+              {orderData.coupon && (
+                <div className="flex justify-between text-sm mb-2 text-green-600">
+                  <span>Coupon ({orderData.coupon.code}):</span>
+                  <span>&minus;${Number(orderData.coupon.discount).toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Transaction ID:</span>
                 <span className="font-mono text-xs">{sessionId?.slice(0, 20)}...</span>
               </div>
+            </div>
+          )}
+
+          {orderData?.items?.length > 0 && (
+            <div className="mb-6 text-left space-y-2" data-testid="order-downloads">
+              {orderData.items.map((it) => {
+                const file = (orderData.files || []).find((f) => f.product_id === it.product_id);
+                return (
+                  <div key={`${it.product_id}-${it.product_name}`} className="flex items-center justify-between gap-3 border border-gray-100 rounded-xl px-4 py-3">
+                    <span className="text-sm font-medium text-[#1A1A2E] truncate">{it.product_name}</span>
+                    {file ? (
+                      <a href={`/api/orders/download?session_id=${encodeURIComponent(sessionId)}&product_id=${encodeURIComponent(it.product_id)}`} download className="shrink-0 inline-flex items-center gap-1.5 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-700" data-testid={`download-${it.product_id}`}>
+                        <Download className="w-4 h-4" />Download
+                      </a>
+                    ) : (
+                      <Link href={`/product/${it.product_slug}`} className="shrink-0 text-sm font-semibold text-[#F97316] hover:underline">View product</Link>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
 

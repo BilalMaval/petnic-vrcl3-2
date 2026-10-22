@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, ArrowRight, Loader2, AlertTriangle, CreditCard, Shield } from 'lucide-react';
 import { useCart, PENDING_CART_CHECKOUT_KEY } from '@/lib/cart-context';
 import { trackBeginCheckout, getStoredAttribution } from '@/lib/analytics';
+import CouponBox from '@/components/CouponBox';
 
 const CartPage = () => {
   const { items, hydrated, subtotal, updateQuantity, removeItem } = useCart();
@@ -12,6 +13,8 @@ const CartPage = () => {
   const [checking, setChecking] = useState(true);
   const [checkoutError, setCheckoutError] = useState('');
   const [processing, setProcessing] = useState(false);
+  const [applied, setApplied] = useState(null); // validated coupon preview from the server
+  const [email, setEmail] = useState('');
 
   // Re-validate each cart line against the live product catalog: current
   // price/name/image for display, and whether it's still purchasable.
@@ -68,9 +71,23 @@ const CartPage = () => {
   const hasUnavailable = items.some((i) => availability[i.id]?.available === false);
   const hasNonDigital = items.some((i) => i.collection_slug !== 'digital');
 
+  // Only ids and quantities go to the server for coupon checks; it prices the cart itself.
+  const couponItems = items.map((item) => ({
+    productId: item.product_id,
+    quantity: item.quantity,
+    designId: item.collection_slug === 'pod' ? (item.design?.id || null) : null,
+    variationOptionIds: (item.variations || []).map((v) => v.id),
+  }));
+  const isFreeOrder = !!applied && applied.total === 0;
+  const needsEmail = !!applied && (applied.coupon.requiresEmail || isFreeOrder);
+
   const handleCheckout = async () => {
     if (hasUnavailable) {
       setCheckoutError('Remove unavailable items before checking out.');
+      return;
+    }
+    if (needsEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setCheckoutError('Enter a valid email address to use this coupon.');
       return;
     }
     setCheckoutError('');
@@ -100,7 +117,8 @@ const CartPage = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           origin_url: window.location.origin,
-          user_email: null,
+          user_email: email.trim() || null,
+          couponCode: applied?.coupon.code || undefined,
           cart_items,
           shipping: { required: hasNonDigital, name: '' },
           selected_design: null,
@@ -234,14 +252,34 @@ const CartPage = () => {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl border border-gray-100 p-6 sticky top-24">
               <h2 className="text-lg font-bold text-[#1A1A2E] mb-4" style={{ fontFamily: 'Playfair Display, serif' }}>Order Summary</h2>
+              <CouponBox items={couponItems} email={email.trim()} onChange={setApplied} />
+              {needsEmail && (
+                <div className="mb-4">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Your email"
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#F97316] focus:ring-2 focus:ring-orange-100"
+                    data-testid="cart-email-input"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">{isFreeOrder ? 'Where we send your order and downloads.' : 'Needed to check this coupon\'s per-customer limit.'}</p>
+                </div>
+              )}
               <div className="flex justify-between text-sm text-[#4A4A68] mb-2">
                 <span>Subtotal</span>
-                <span data-testid="cart-subtotal">${subtotal.toFixed(2)}</span>
+                <span data-testid="cart-subtotal">${(applied ? applied.subtotal : subtotal).toFixed(2)}</span>
               </div>
+              {applied && (
+                <div className="flex justify-between text-sm text-green-600 mb-2" data-testid="cart-coupon-line">
+                  <span>Coupon ({applied.coupon.code})</span>
+                  <span>&minus;${applied.discount.toFixed(2)}</span>
+                </div>
+              )}
               <p className="text-xs text-gray-400 mb-4">Shipping and final total are calculated securely at checkout.</p>
               <div className="flex justify-between font-bold text-lg border-t pt-3 mb-6">
                 <span>Estimated Total</span>
-                <span className="text-[#F97316]" data-testid="cart-total">${subtotal.toFixed(2)}</span>
+                <span className="text-[#F97316]" data-testid="cart-total">${(applied ? applied.total : subtotal).toFixed(2)}</span>
               </div>
 
               {checkoutError && <p className="text-sm text-red-600 mb-3" data-testid="checkout-error">{checkoutError}</p>}
@@ -252,7 +290,7 @@ const CartPage = () => {
                 data-testid="proceed-to-checkout-button"
                 className="w-full flex items-center justify-center gap-2 bg-[#F97316] text-white py-4 rounded-xl font-bold hover:bg-[#EA6C10] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <CreditCard className="w-5 h-5" />{processing ? 'Redirecting…' : 'Proceed to Checkout'}
+                <CreditCard className="w-5 h-5" />{processing ? 'Redirecting…' : isFreeOrder ? 'Complete Free Order' : 'Proceed to Checkout'}
               </button>
               <p className="text-xs text-center text-gray-400 flex items-center justify-center gap-1 mt-3">
                 <Shield className="w-3 h-3" />Secure payment powered by Stripe

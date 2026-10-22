@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Star, ShoppingCart, Heart, Upload, Check, CreditCard, Truck, Shield, ArrowLeft, Minus, Plus, X, ChevronLeft, ChevronRight, Download, ExternalLink, DollarSign, Sparkles } from 'lucide-react';
 import { useCart, buildCartItemId } from '@/lib/cart-context';
 import { trackViewItem, trackAddToCart, trackBeginCheckout, getStoredAttribution } from '@/lib/analytics';
+import CouponBox from '@/components/CouponBox';
 
 // Default reference designs for POD products
 const defaultReferenceDesigns = [
@@ -33,6 +34,7 @@ const ProductDetail = ({ product, related = [] }) => {
   const [selectedVariations, setSelectedVariations] = useState({}); // { [groupId]: optionId }
   const [variationError, setVariationError] = useState('');
   const [addedToCart, setAddedToCart] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState(null); // validated coupon preview from the server
   const fileInputRef = useRef(null);
   const { addItem } = useCart();
   const viewedProductIdRef = useRef(null);
@@ -178,6 +180,7 @@ const ProductDetail = ({ product, related = [] }) => {
         body: JSON.stringify({
           origin_url: window.location.origin,
           user_email: paymentForm.email || null,
+          couponCode: appliedCoupon?.coupon.code || undefined,
           cart_items: [
             {
               product_id: product.id,
@@ -615,8 +618,16 @@ const ProductDetail = ({ product, related = [] }) => {
               {selectedOptionsList.length > 0 && (
                 <p className="text-sm text-[#4A4A68]">{selectedOptionsList.map(o => o.label).join(', ')}</p>
               )}
-              <p className="text-2xl font-bold text-[#F97316]">${total}</p>
+              {appliedCoupon && (
+                <p className="text-sm text-green-600 mt-1" data-testid="payment-coupon-line">Coupon ({appliedCoupon.coupon.code}) &minus;${appliedCoupon.discount.toFixed(2)}</p>
+              )}
+              <p className="text-2xl font-bold text-[#F97316]" data-testid="payment-total">${appliedCoupon ? appliedCoupon.total.toFixed(2) : total}</p>
             </div>
+            <CouponBox
+              items={[{ productId: product.id, quantity, designId: isPOD ? selectedDesign?.id || null : null, variationOptionIds: selectedOptionsList.map(o => o.id) }]}
+              email={paymentForm.email}
+              onChange={setAppliedCoupon}
+            />
             <form onSubmit={handlePaymentSubmit} className="space-y-4" data-testid="payment-form">
               <p className="text-sm text-[#4A4A68]">
                 You will be redirected to Stripe&apos;s secure checkout to complete payment{!isDigital ? ' and enter your shipping address' : ''}.
@@ -627,7 +638,7 @@ const ProductDetail = ({ product, related = [] }) => {
                 <p className="text-sm text-red-600" data-testid="payment-error">{paymentError}</p>
               )}
               <button type="submit" data-testid="pay-now-button" disabled={processing} className="w-full flex items-center justify-center gap-2 bg-[#F97316] text-white py-4 rounded-xl font-bold text-base hover:bg-[#EA6C10] transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                <CreditCard className="w-5 h-5" />{processing ? 'Redirecting…' : `Continue to Payment — $${total}`}
+                <CreditCard className="w-5 h-5" />{processing ? 'Redirecting…' : appliedCoupon?.total === 0 ? 'Complete Free Order' : `Continue to Payment — ${appliedCoupon ? appliedCoupon.total.toFixed(2) : total}`}
               </button>
               <p className="text-xs text-center text-gray-400 flex items-center justify-center gap-1"><Shield className="w-3 h-3" />Secure payment powered by Stripe</p>
             </form>

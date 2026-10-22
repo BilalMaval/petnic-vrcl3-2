@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseAdmin } from '@/lib/supabase';
 import { stripeClient } from '@/lib/stripe';
-import { buildOrderFromTransaction } from '@/lib/orders';
+import { completePaidSession, expireSession } from '@/lib/orders-finalize';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -28,60 +27,20 @@ export async function POST(request) {
       event = JSON.parse(rawBody);
     }
 
-    const supabase = getSupabaseAdmin();
-
     if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
       const session = event.data.object;
-      const sessionId = session.id;
       const paymentStatus = session.payment_status === 'paid' ? 'paid' : 'pending';
 
-      // Idempotent update + order creation.
-      const { data: existing } = await supabase
-        .from('payment_transactions')
-        .select('id, payment_status')
-        .eq('session_id', sessionId)
-        .maybeSingle();
-
-      if (existing && existing.payment_status !== 'paid') {
-        await supabase
-          .from('payment_transactions')
-          .update({
-            status: session.status,
-            payment_status: paymentStatus,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('session_id', sessionId);
-
-        if (paymentStatus === 'paid') {
-          const { data: tx } = await supabase
-            .from('payment_transactions')
-            .select('*')
-            .eq('session_id', sessionId)
-            .single();
-
-          if (tx) {
-            const { data: existingOrder } = await supabase
-              .from('orders')
-              .select('id')
-              .eq('payment_session_id', sessionId)
-              .maybeSingle();
-
-            if (!existingOrder) {
-              await supabase.from('orders').insert(buildOrderFromTransaction(tx));
-            }
-          }
-        }
-      }
+      // Idempotent: shared with the status poll, only the first to see
+      // "paid" creates the order / records the coupon redemption.
+      await completePaidSession(session.id, {
+        status: session.status,
+        paymentStatus,
+        customerEmail: session.customer_details?.email || session.customer_email || null,
+      });
     } else if (event.type === 'checkout.session.expired') {
-      const session = event.data.object;
-      await supabase
-        .from('payment_transactions')
-        .update({
-          status: 'expired',
-          payment_status: 'expired',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('session_id', session.id);
+      // Also gives back any coupon use reserved for this checkout.
+      await expireSession(event.data.object.id);
     }
 
     return NextResponse.json({ received: true });

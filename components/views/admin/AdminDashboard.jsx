@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Package, FolderTree, ShoppingBag, LogOut, Menu, X, BarChart3, Users, Mail, FileText, Palette, Image, Truck, Layers } from 'lucide-react';
+import { LayoutDashboard, Package, FolderTree, ShoppingBag, LogOut, Menu, X, BarChart3, Users, Mail, FileText, Palette, Image, Truck, Layers, Ticket } from 'lucide-react';
 import AdminLogin from './AdminLogin';
 import DashboardHome from './DashboardHome';
 import ProductsManager from './ProductsManager';
@@ -11,6 +11,7 @@ import ReferenceDesignsManager from './ReferenceDesignsManager';
 import DropshippingManager from './DropshippingManager';
 import UsersManager from './UsersManager';
 import VariationsManager from './VariationsManager';
+import CouponsManager from './CouponsManager';
 
 const tabs = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -18,6 +19,7 @@ const tabs = [
   { id: 'variations', label: 'Variations', icon: Layers },
   { id: 'categories', label: 'Categories', icon: FolderTree },
   { id: 'orders', label: 'Orders', icon: ShoppingBag },
+  { id: 'coupons', label: 'Coupons', icon: Ticket },
   { id: 'users', label: 'Users', icon: Users },
   { id: 'blog', label: 'Blog', icon: FileText },
   { id: 'designs', label: 'AI Designs', icon: Image },
@@ -76,6 +78,7 @@ export default function AdminDashboard() {
       case 'variations': return <VariationsManager token={token} />;
       case 'categories': return <CategoriesManager token={token} />;
       case 'orders': return <OrdersManager token={token} />;
+      case 'coupons': return <CouponsManager token={token} />;
       case 'users': return <UsersManager token={token} />;
       case 'blog': return <BlogManager token={token} />;
       case 'designs': return <ReferenceDesignsManager token={token} />;

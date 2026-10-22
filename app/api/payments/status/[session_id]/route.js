@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { stripeClient } from '@/lib/stripe';
-import { buildOrderFromTransaction } from '@/lib/orders';
+import { completePaidSession, expireSession, listDownloadableFiles } from '@/lib/orders-finalize';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -13,8 +13,33 @@ export async function GET(_request, { params }) {
       return NextResponse.json({ error: 'session_id required' }, { status: 400 });
     }
 
-    const stripe = stripeClient;
     const supabase = getSupabaseAdmin();
+
+    // Free (100% coupon) orders never touch Stripe; the database record is
+    // the source of truth.
+    if (session_id.startsWith('free_')) {
+      const { data: tx } = await supabase
+        .from('payment_transactions')
+        .select('session_id, amount, currency, status, payment_status, user_email, metadata')
+        .eq('session_id', session_id)
+        .maybeSingle();
+      if (!tx) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+      const paid = tx.payment_status === 'paid';
+      const items = paid ? tx.metadata?.items || [] : [];
+      return NextResponse.json({
+        session_id,
+        status: paid ? 'complete' : tx.status,
+        payment_status: tx.payment_status,
+        amount_total: Math.round(parseFloat(tx.amount) * 100),
+        currency: tx.currency || 'usd',
+        customer_email: tx.user_email || null,
+        items,
+        files: paid ? await listDownloadableFiles(items) : [],
+        coupon: tx.metadata?.coupon ? { code: tx.metadata.coupon.code, discount: tx.metadata.coupon.discount } : null,
+      });
+    }
+
+    const stripe = stripeClient;
 
     // Try Stripe first. If the Emergent proxy transiently 404s on a
     // freshly-created session, fall back to our pending DB record so the UI
@@ -44,56 +69,25 @@ export async function GET(_request, { params }) {
 
     const status = session.status; // open | complete | expired
     const paymentStatus = session.payment_status; // unpaid | paid | no_payment_required
+    const customerEmail = session.customer_details?.email || session.customer_email || null;
 
-    // Update transaction record idempotently. Only flip to "paid" once.
+    // Update the transaction idempotently: the first caller to see "paid"
+    // creates the order (see lib/orders-finalize.js).
     try {
-      const { data: existing } = await supabase
-        .from('payment_transactions')
-        .select('id, payment_status')
-        .eq('session_id', session_id)
-        .maybeSingle();
-
-      if (existing && existing.payment_status !== 'paid') {
-        await supabase
-          .from('payment_transactions')
-          .update({
-            status,
-            payment_status: paymentStatus,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('session_id', session_id);
-
-        // On successful payment, create an order if not already created.
-        if (paymentStatus === 'paid') {
-          const { data: tx } = await supabase
-            .from('payment_transactions')
-            .select('*')
-            .eq('session_id', session_id)
-            .single();
-
-          if (tx) {
-            const { data: existingOrder } = await supabase
-              .from('orders')
-              .select('id')
-              .eq('payment_session_id', session_id)
-              .maybeSingle();
-
-            if (!existingOrder) {
-              await supabase.from('orders').insert(buildOrderFromTransaction(tx));
-            }
-          }
-        }
+      if (status === 'expired') {
+        await expireSession(session_id);
+      } else {
+        await completePaidSession(session_id, { status, paymentStatus, customerEmail });
       }
     } catch (dbErr) {
       console.error('payment status db update failed:', dbErr);
     }
 
-    // Analytics: once paid, surface the itemized breakdown that was already
-    // stored at checkout time so the success page can fire a properly
-    // itemized purchase event. Read-only lookup - does not affect order
-    // creation above, and product/pricing data is already validated
-    // server-side at the point it was originally stored.
+    // Once paid, surface the itemized breakdown stored at checkout time so
+    // the success page can fire an itemized purchase event and offer downloads.
     let items = [];
+    let files = [];
+    let coupon = null;
     if (paymentStatus === 'paid') {
       try {
         const { data: txRow } = await supabase
@@ -102,6 +96,8 @@ export async function GET(_request, { params }) {
           .eq('session_id', session_id)
           .maybeSingle();
         items = txRow?.metadata?.items || [];
+        files = await listDownloadableFiles(items);
+        coupon = txRow?.metadata?.coupon ? { code: txRow.metadata.coupon.code, discount: txRow.metadata.coupon.discount } : null;
       } catch (itemsErr) {
         console.error('Failed to load items for analytics:', itemsErr);
       }
@@ -113,8 +109,10 @@ export async function GET(_request, { params }) {
       payment_status: paymentStatus,
       amount_total: session.amount_total,
       currency: session.currency,
-      customer_email: session.customer_details?.email || session.customer_email,
+      customer_email: customerEmail,
       items,
+      files,
+      coupon,
     });
   } catch (error) {
     console.error('Status check error:', error);
