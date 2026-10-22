@@ -1,4 +1,5 @@
 import AboutPageClient from '@/components/views/AboutPage';
+import { getVisibleTeam } from '@/lib/team';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.petnicstudio.com';
 
@@ -15,4 +16,10 @@ export const metadata = {
   },
 };
 
-export default function AboutPage() { return <AboutPageClient />; }
+// Edits in the admin refresh this page immediately; the timer is a safety net.
+export const revalidate = 300;
+
+export default async function AboutPage() {
+  const team = await getVisibleTeam();
+  return <AboutPageClient team={team} />;
+}
