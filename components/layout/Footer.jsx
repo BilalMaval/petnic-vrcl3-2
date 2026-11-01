@@ -101,7 +101,7 @@ const Footer = () => {
             <p className="text-gray-500 text-xs flex items-center gap-2">
               <Link href="/contact" className="hover:text-gray-300 transition-colors">Contact Us</Link>
               <span aria-hidden="true">·</span>
-              <span>Secure payments by Stripe</span>
+              <span>Secure payments by Stripe and PayPal</span>
             </p>
           </div>
         </div>

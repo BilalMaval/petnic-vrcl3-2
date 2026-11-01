@@ -20,7 +20,7 @@ const AboutPage = ({ team = null }) => {
             { icon: Heart, title: 'Our Mission', text: 'To help pet parents celebrate the bond with their companions through personalized, quality products.' },
             { icon: Award, title: 'Quality Promise', text: 'Every product is made to order and backed by our 30-day satisfaction guarantee.' },
             { icon: Sparkles, title: 'Made to Order', text: 'Each portrait and product is personalized to your pet — nothing is mass-produced or pre-made.' },
-            { icon: Lock, title: 'Secure Checkout', text: 'Payments are processed securely through Stripe, and your information is never shared.' },
+            { icon: Lock, title: 'Secure Checkout', text: 'Payments are processed securely through Stripe and PayPal, and your information is never shared.' },
           ].map(({ icon: Icon, title, text }) => (
             <div key={title} className="bg-white rounded-2xl p-6 border border-gray-100">
               <Icon className="w-8 h-8 text-[#F97316] mb-3" />

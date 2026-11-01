@@ -42,7 +42,7 @@ const sections = [
         <ul>
           <li>All prices are displayed in US dollars (USD) unless stated otherwise and exclude applicable taxes and shipping fees, which are calculated at checkout.</li>
           <li>Placing an order constitutes an <strong>offer</strong> to purchase. We accept your offer when we send you an order confirmation email. We may decline an order at our discretion (e.g., suspected fraud, product unavailability, pricing error).</li>
-          <li>Payment is processed securely by <strong>Stripe</strong>. We accept major credit and debit cards. Payment is captured at checkout.</li>
+          <li>Payment is processed securely by <strong>Stripe</strong> and <strong>PayPal</strong>. We accept major credit and debit cards and PayPal. Payment is captured at checkout.</li>
           <li>If a product is mispriced due to a typographical error, we may cancel the order and refund any payment.</li>
         </ul>
       </>

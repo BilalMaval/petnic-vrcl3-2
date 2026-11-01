@@ -57,7 +57,7 @@ const sections = [
     heading: 'Refund Processing & Timing',
     body: (
       <>
-        <p>Once we receive and inspect your return (or approve a no-return refund for damaged items), we will process your refund within <strong>3-5 business days</strong> to your original payment method via Stripe. Depending on your bank, the refund may take a further 5-10 business days to appear on your statement.</p>
+        <p>Once we receive and inspect your return (or approve a no-return refund for damaged items), we will process your refund within <strong>3-5 business days</strong> to your original payment method (via Stripe or PayPal, depending on how you paid). Depending on your bank, the refund may take a further 5-10 business days to appear on your statement.</p>
         <p>Original shipping fees are non-refundable except where the return is due to our error.</p>
       </>
     ),

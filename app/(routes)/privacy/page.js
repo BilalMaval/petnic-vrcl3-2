@@ -19,7 +19,7 @@ const sections = [
         <ul>
           <li><strong>Contact details</strong> — name, email address, shipping address, billing address, phone number.</li>
           <li><strong>Order details</strong> — products purchased, customisation choices, uploaded pet photos, gift messages.</li>
-          <li><strong>Payment information</strong> — handled entirely by our payment processor (Stripe). We never see or store your full card number; we only receive a transaction reference and the last 4 digits.</li>
+          <li><strong>Payment information</strong> — handled entirely by our payment processors (Stripe and PayPal). We never see or store your full card number or PayPal login; we only receive a transaction reference, the payer name and email, and (for card payments) the last 4 digits.</li>
           <li><strong>Account credentials</strong> — email and a hashed password (we never store passwords in plain text).</li>
         </ul>
         <p>We also collect information automatically, including IP address, browser and device type, pages viewed, referring URL, and timestamps, via cookies and similar technologies (see our <a href="/cookies">Cookie Policy</a>).</p>
@@ -49,6 +49,7 @@ const sections = [
         <p>We do not sell your personal information. We share it only with trusted service providers who help us run our business, under contractual confidentiality obligations:</p>
         <ul>
           <li><strong>Stripe</strong> — payment processing.</li>
+          <li><strong>PayPal</strong> — payment processing.</li>
           <li><strong>Supabase</strong> — secure database hosting.</li>
           <li><strong>Brevo</strong> — transactional and marketing emails.</li>
           <li><strong>Print partners &amp; carriers</strong> — to fulfil and ship your physical orders (e.g., shipping name and address only).</li>

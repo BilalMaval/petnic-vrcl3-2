@@ -25,7 +25,7 @@ const sections = [
         <p>We use cookies and similar technologies (pixels, local storage) to:</p>
         <ul>
           <li>Keep you signed in and remember your shopping cart.</li>
-          <li>Run secure payment sessions with Stripe.</li>
+          <li>Run secure payment sessions with Stripe and PayPal.</li>
           <li>Measure traffic and improve our website via Google Analytics.</li>
           <li>Show you relevant marketing on partner platforms (only if you opt in).</li>
         </ul>
@@ -38,7 +38,7 @@ const sections = [
     body: (
       <>
         <h3>Strictly Necessary</h3>
-        <p>Required for the Site to function — e.g., authentication tokens, cart contents, CSRF protection, Stripe checkout sessions. These cannot be turned off.</p>
+        <p>Required for the Site to function — e.g., authentication tokens, cart contents, CSRF protection, Stripe and PayPal checkout sessions. These cannot be turned off.</p>
         <h3>Performance &amp; Analytics</h3>
         <p>Help us understand how visitors use the Site so we can improve it. We use <strong>Google Analytics</strong> with IP anonymisation. Data is aggregated and pseudonymised.</p>
         <h3>Functional</h3>
@@ -56,6 +56,7 @@ const sections = [
         <p>Some cookies are set by third-party services we use:</p>
         <ul>
           <li><strong>Stripe</strong> — payment processing and fraud prevention.</li>
+          <li><strong>PayPal</strong> — payment processing and fraud prevention.</li>
           <li><strong>Google Analytics</strong> — anonymised website analytics.</li>
           <li><strong>Supabase</strong> — secure session management.</li>
           <li><strong>Meta / Pinterest pixels</strong> — only when marketing cookies are accepted.</li>
