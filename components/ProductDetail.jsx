@@ -6,6 +6,7 @@ import { Star, ShoppingCart, Heart, Upload, Check, CreditCard, Truck, Shield, Ar
 import { useCart, buildCartItemId } from '@/lib/cart-context';
 import { trackViewItem, trackAddToCart, trackBeginCheckout, getStoredAttribution } from '@/lib/analytics';
 import CouponBox from '@/components/CouponBox';
+import PayPalCheckout from '@/components/PayPalCheckout';
 
 // Default reference designs for POD products
 const defaultReferenceDesigns = [
@@ -203,6 +204,42 @@ const ProductDetail = ({ product, related = [] }) => {
       setPaymentError(err.message || 'Something went wrong. Please try again.');
       setProcessing(false);
     }
+  };
+
+  // PayPal path for Buy Now: same inputs as the Stripe button; the server prices everything.
+  const getPayPalPayload = () => {
+    const email = (paymentForm.email || '').trim();
+    if (!paymentForm.name.trim()) return { error: 'Please enter your full name.' };
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: 'Please enter a valid email address.' };
+    return {
+      payload: {
+        user_email: email,
+        couponCode: appliedCoupon?.coupon.code || undefined,
+        cart_items: [{
+          product_id: product.id,
+          quantity,
+          design_id: isPOD ? selectedDesign?.id || null : null,
+          variation_option_ids: selectedOptionsList.map(o => o.id),
+        }],
+        shipping: { required: !isDigital, name: paymentForm.name },
+        selected_design: isPOD ? selectedDesign?.name || null : null,
+        attribution: getStoredAttribution(),
+      },
+    };
+  };
+
+  const trackBuyNowStart = () => {
+    trackBeginCheckout({
+      items: [{
+        item_id: product.id,
+        item_name: product.name,
+        price: unitPrice,
+        quantity,
+        item_category: product.categories?.name || product.collections?.name,
+        item_variant: analyticsVariant,
+      }],
+      value: parseFloat(total),
+    });
   };
 
   const handleAddToCart = () => {
@@ -640,8 +677,16 @@ const ProductDetail = ({ product, related = [] }) => {
               <button type="submit" data-testid="pay-now-button" disabled={processing} className="w-full flex items-center justify-center gap-2 bg-[#F97316] text-white py-4 rounded-xl font-bold text-base hover:bg-[#EA6C10] transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                 <CreditCard className="w-5 h-5" />{processing ? 'Redirecting…' : appliedCoupon?.total === 0 ? 'Complete Free Order' : `Continue to Payment — ${appliedCoupon ? appliedCoupon.total.toFixed(2) : total}`}
               </button>
-              <p className="text-xs text-center text-gray-400 flex items-center justify-center gap-1"><Shield className="w-3 h-3" />Secure payment powered by Stripe</p>
+              <p className="text-xs text-center text-gray-400 flex items-center justify-center gap-1"><Shield className="w-3 h-3" />Secure payment powered by Stripe and PayPal</p>
             </form>
+            {appliedCoupon?.total !== 0 && (
+              <PayPalCheckout
+                getPayload={getPayPalPayload}
+                onStart={trackBuyNowStart}
+                onPaid={(sessionId) => { window.location.href = `/checkout/success?session_id=${encodeURIComponent(sessionId)}`; }}
+                disabled={processing}
+              />
+            )}
           </div>
         </div>
       )}

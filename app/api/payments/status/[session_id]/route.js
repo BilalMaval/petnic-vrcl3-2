@@ -15,9 +15,9 @@ export async function GET(_request, { params }) {
 
     const supabase = getSupabaseAdmin();
 
-    // Free (100% coupon) orders never touch Stripe; the database record is
-    // the source of truth.
-    if (session_id.startsWith('free_')) {
+    // Free (100% coupon) and PayPal orders never touch Stripe; the database
+    // record is the source of truth (PayPal is captured and verified server-side).
+    if (session_id.startsWith('free_') || session_id.startsWith('pp_')) {
       const { data: tx } = await supabase
         .from('payment_transactions')
         .select('session_id, amount, currency, status, payment_status, user_email, metadata')

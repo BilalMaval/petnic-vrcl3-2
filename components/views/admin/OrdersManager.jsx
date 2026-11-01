@@ -146,10 +146,12 @@ export default function OrdersManager({ token }) {
         <select value={filter} onChange={e => setFilter(e.target.value)} className="px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm outline-none min-w-[140px]" data-testid="status-filter">
           <option value="all">All Status</option>
           <option value="pending">Pending</option>
+          <option value="paid">Paid</option>
           <option value="confirmed">Confirmed</option>
           <option value="shipped">Shipped</option>
           <option value="delivered">Delivered</option>
           <option value="cancelled">Cancelled</option>
+          <option value="refunded">Refunded</option>
         </select>
         <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm outline-none min-w-[140px]" data-testid="type-filter">
           <option value="all">All Types</option>
@@ -186,7 +188,7 @@ export default function OrdersManager({ token }) {
               ) : filteredOrders.map(o => (
                 <tr key={o.id} className="border-b border-gray-50 hover:bg-gray-50">
                   <td className="py-3 px-4 font-mono text-xs">{o.order_id}</td>
-                  <td className="py-3 px-4"><p className="font-medium">{o.customer_name || 'Guest'}</p><p className="text-xs text-gray-400">{o.customer_email}</p></td>
+                  <td className="py-3 px-4"><p className="font-medium">{o.customer_name || 'Guest'}</p><p className="text-xs text-gray-400">{o.customer_email}</p>{o.payment_session_id && <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mt-0.5" data-testid="order-payment-method">{o.payment_session_id.startsWith('pp_') ? 'PayPal' : o.payment_session_id.startsWith('free_') ? 'Free (coupon)' : 'Stripe'}</p>}{o.shipping_address && typeof o.shipping_address === 'object' && <p className="text-xs text-gray-500 mt-1 leading-snug" data-testid="order-shipping-address">{[o.shipping_address.name, o.shipping_address.line1, o.shipping_address.line2, [o.shipping_address.city, o.shipping_address.state, o.shipping_address.postal_code].filter(Boolean).join(', '), o.shipping_address.country].filter(Boolean).map((line, i) => <span key={i} className="block">{line}</span>)}</p>}</td>
                   <td className="py-3 px-4">
                     <p>{o.product_name}</p>
                     {o.selected_design && <p className="text-xs text-purple-600">Style: {o.selected_design}</p>}
@@ -214,7 +216,7 @@ export default function OrdersManager({ token }) {
                     </div>
                   </td>
                   <td className="py-3 px-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${o.status === 'confirmed' ? 'bg-green-100 text-green-700' : o.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : o.status === 'shipped' ? 'bg-blue-100 text-blue-700' : o.status === 'delivered' ? 'bg-purple-100 text-purple-700' : 'bg-red-100 text-red-700'}`}>{o.status}</span>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${(o.status === 'confirmed' || o.status === 'paid') ? 'bg-green-100 text-green-700' : o.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : o.status === 'shipped' ? 'bg-blue-100 text-blue-700' : o.status === 'delivered' ? 'bg-purple-100 text-purple-700' : 'bg-red-100 text-red-700'}`}>{o.status}</span>
                     {o.cj_order_id && (
                       <p className="text-xs text-purple-600 mt-1">CJ: {o.cj_order_id}</p>
                     )}
@@ -223,10 +225,12 @@ export default function OrdersManager({ token }) {
                   <td className="py-3 px-4 text-right">
                     <select value={o.status} onChange={e => updateStatus(o.id, e.target.value)} className="text-xs border border-gray-200 rounded px-2 py-1 outline-none">
                       <option value="pending">Pending</option>
+                      <option value="paid">Paid</option>
                       <option value="confirmed">Confirmed</option>
                       <option value="shipped">Shipped</option>
                       <option value="delivered">Delivered</option>
                       <option value="cancelled">Cancelled</option>
+                      <option value="refunded">Refunded</option>
                     </select>
                   </td>
                 </tr>

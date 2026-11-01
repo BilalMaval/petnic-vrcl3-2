@@ -6,6 +6,7 @@ import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, ArrowRight, Loader2, Alert
 import { useCart, PENDING_CART_CHECKOUT_KEY } from '@/lib/cart-context';
 import { trackBeginCheckout, getStoredAttribution } from '@/lib/analytics';
 import CouponBox from '@/components/CouponBox';
+import PayPalCheckout from '@/components/PayPalCheckout';
 
 const CartPage = () => {
   const { items, hydrated, subtotal, updateQuantity, removeItem } = useCart();
@@ -81,6 +82,46 @@ const CartPage = () => {
   const isFreeOrder = !!applied && applied.total === 0;
   const needsEmail = !!applied && (applied.coupon.requiresEmail || isFreeOrder);
 
+  const trackCartCheckoutStart = () => {
+    trackBeginCheckout({
+      items: items.map((item) => ({
+        item_id: item.product_id,
+        item_name: item.name,
+        price: unitPrice(item),
+        quantity: item.quantity,
+        item_variant: [item.design?.name, ...(item.variations || []).map((v) => v.label)].filter(Boolean).join(', ') || undefined,
+      })),
+      value: subtotal,
+    });
+  };
+
+  // PayPal sends the same ids/quantities/coupon as the Stripe button; the
+  // server prices everything. Returns { payload } or { error }.
+  const getPayPalPayload = () => {
+    if (hasUnavailable) return { error: 'Remove unavailable items before checking out.' };
+    if (needsEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return { error: 'Enter a valid email address to use this coupon.' };
+    return {
+      payload: {
+        user_email: email.trim() || null,
+        couponCode: applied?.coupon.code || undefined,
+        cart_items: items.map((item) => ({
+          product_id: item.product_id,
+          quantity: item.quantity,
+          design_id: item.collection_slug === 'pod' ? (item.design?.id || null) : null,
+          variation_option_ids: (item.variations || []).map((v) => v.id),
+        })),
+        shipping: { required: hasNonDigital, name: '' },
+        attribution: getStoredAttribution(),
+      },
+    };
+  };
+
+  const handlePayPalPaid = (sessionId) => {
+    // Same flag the Stripe flow sets, so the success page clears the cart.
+    try { window.localStorage.setItem(PENDING_CART_CHECKOUT_KEY, '1'); } catch {}
+    window.location.href = `/checkout/success?session_id=${encodeURIComponent(sessionId)}`;
+  };
+
   const handleCheckout = async () => {
     if (hasUnavailable) {
       setCheckoutError('Remove unavailable items before checking out.');
@@ -94,16 +135,7 @@ const CartPage = () => {
     setProcessing(true);
     // Cart checkout is actually starting (not just the cart page opening) -
     // represents the full cart contents.
-    trackBeginCheckout({
-      items: items.map((item) => ({
-        item_id: item.product_id,
-        item_name: item.name,
-        price: unitPrice(item),
-        quantity: item.quantity,
-        item_variant: [item.design?.name, ...(item.variations || []).map((v) => v.label)].filter(Boolean).join(', ') || undefined,
-      })),
-      value: subtotal,
-    });
+    trackCartCheckoutStart();
     try {
       const cart_items = items.map((item) => ({
         product_id: item.product_id,
@@ -292,8 +324,11 @@ const CartPage = () => {
               >
                 <CreditCard className="w-5 h-5" />{processing ? 'Redirecting…' : isFreeOrder ? 'Complete Free Order' : 'Proceed to Checkout'}
               </button>
+              {!isFreeOrder && (
+                <PayPalCheckout getPayload={getPayPalPayload} onStart={trackCartCheckoutStart} onPaid={handlePayPalPaid} disabled={processing || hasUnavailable} />
+              )}
               <p className="text-xs text-center text-gray-400 flex items-center justify-center gap-1 mt-3">
-                <Shield className="w-3 h-3" />Secure payment powered by Stripe
+                <Shield className="w-3 h-3" />Secure payment powered by Stripe and PayPal
               </p>
             </div>
           </div>
